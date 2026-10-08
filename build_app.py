@@ -1,8 +1,9 @@
 """Construit la version installable (PWA) de Vingt Indices à partir de vingt-indices.html."""
 import json, re, time, pathlib
 
-SRC = pathlib.Path("/home/claude/vingt-indices.html")
-OUT = pathlib.Path("/home/claude/vingt-indices-app")
+ROOT = pathlib.Path(__file__).resolve().parent
+SRC = ROOT / "source" / "vingt-indices.html"
+OUT = ROOT
 src = SRC.read_text()
 version = time.strftime("%Y%m%d%H%M%S")
 
