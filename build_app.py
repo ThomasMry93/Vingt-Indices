@@ -18,7 +18,7 @@ head = f"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 {title.strip()}
-<meta name="theme-color" content="#1f3a8a">
+<meta name="theme-color" content="#d8c29c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="20 Indices">
@@ -41,7 +41,19 @@ img{{max-width:100%}}
 """
 tail = f"""
 <script>
-if("serviceWorker" in navigator){{window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{{}}))}}
+/* Mise à jour : la nouvelle version s'installe en arrière-plan, puis le bandeau propose de l'appliquer. */
+if("serviceWorker" in navigator){{
+  let reloading=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{{if(reloading)return;reloading=true;location.reload()}});
+  window.addEventListener("load",()=>{{
+    navigator.serviceWorker.register("sw.js").then(reg=>{{
+      const ask=w=>{{if(w&&navigator.serviceWorker.controller&&window.VI_showUpdate)window.VI_showUpdate(()=>w.postMessage("skipWaiting"))}};
+      if(reg.waiting)ask(reg.waiting);
+      reg.addEventListener("updatefound",()=>{{const w=reg.installing;if(w)w.addEventListener("statechange",()=>{{if(w.state==="installed")ask(w)}})}});
+      document.addEventListener("visibilitychange",()=>{{if(document.visibilityState==="visible")reg.update().catch(()=>{{}})}});
+    }}).catch(()=>{{}});
+  }});
+}}
 </script>
 </body>
 </html>
@@ -57,8 +69,8 @@ manifest = {
     "scope": "./",
     "display": "standalone",
     "orientation": "portrait",
-    "background_color": "#1f3a8a",
-    "theme_color": "#1f3a8a",
+    "background_color": "#d8c29c",
+    "theme_color": "#d8c29c",
     "icons": [
         {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
         {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
@@ -67,16 +79,28 @@ manifest = {
 }
 (OUT / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False, indent=1))
 
-sw = f"""// Hors connexion : copie locale de l'appli, mise à jour en arrière-plan à chaque ouverture.
+sw = f"""// Hors connexion : l'appli est gardée en local. Une nouvelle version s'installe en arrière-plan
+// et attend que le joueur touche « Mettre à jour » (ou que l'appli soit fermée complètement).
 const CACHE="vingt-indices-{version}";
 const SHELL=["./","index.html","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png"];
-self.addEventListener("install",e=>{{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))}});
-self.addEventListener("activate",e=>{{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))}});
+self.addEventListener("install",e=>{{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL.map(u=>new Request(u,{{cache:"reload"}})))))}});
+self.addEventListener("message",e=>{{if(e.data==="skipWaiting")self.skipWaiting()}});
+self.addEventListener("activate",e=>{{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith("vingt-indices-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))}});
 self.addEventListener("fetch",e=>{{
-  if(e.request.method!=="GET")return;
-  e.respondWith(caches.open(CACHE).then(async c=>{{
-    const hit=await c.match(e.request,{{ignoreSearch:true}});
-    const net=fetch(e.request).then(r=>{{if(r&&(r.ok||r.type==="opaque"))c.put(e.request,r.clone());return r}}).catch(()=>hit);
+  const req=e.request;if(req.method!=="GET")return;
+  const url=new URL(req.url);
+  if(url.origin===location.origin){{
+    // Fichiers de l'appli : toujours la version installée, pour que la mise à jour soit nette.
+    e.respondWith(caches.open(CACHE).then(async c=>{{
+      const hit=req.mode==="navigate"?await c.match("index.html"):await c.match(req,{{ignoreSearch:true}});
+      return hit||fetch(req);
+    }}));
+    return;
+  }}
+  // Polices : copie locale, rafraîchie en arrière-plan.
+  e.respondWith(caches.open("vingt-indices-fonts").then(async c=>{{
+    const hit=await c.match(req);
+    const net=fetch(req).then(r=>{{if(r&&(r.ok||r.type==="opaque"))c.put(req,r.clone());return r}}).catch(()=>hit);
     return hit||net;
   }}));
 }});

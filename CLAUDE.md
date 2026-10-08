@@ -20,6 +20,14 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 - Option **jeton de réponse** (activée par défaut) : un jeton par joueur et par partie pour répondre hors de son tour ; perdu qu'on trouve ou non.
 - Passer une carte (sans points), **annuler la dernière action** (historique multiple), **ajuster les scores** à la main (±1, ±5).
 
+## Design (« carton et papier »)
+
+- Table en carton kraft (grain SVG inline), cartes en carton blanc imprimé, planche de 20 gommettes à la couleur de la catégorie (Personnage rouge, Lieu bleu, Chose jaune), indices sur fiches lignées tapées à la machine.
+- Polices : Alfa Slab One (titres, numéros), Karla (texte), Special Elite (indices).
+- Animations : carte distribuée, gommette décollée, fiche retournée en 3D puis tapée, tampon Trouvé/Raté, compteurs de points, confettis en papier, podium final. `prefers-reduced-motion` respecté.
+- Sons synthétisés en WebAudio (aucun fichier), bouton pour couper, réglage mémorisé.
+- Appli installée : la nouvelle version s'installe en arrière-plan puis un bandeau « Mettre à jour » l'applique (`window.VI_showUpdate`, message `skipWaiting` au service worker).
+
 ## Cartes
 
 - 3 catégories : **Personnage, Lieu, Chose**. 642 cartes de base (234 / 204 / 204).
