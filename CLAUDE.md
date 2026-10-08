@@ -5,6 +5,12 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 - Jeu en ligne : https://thomasmry93.github.io/Vingt-Indices/ (GitHub Pages, branche `main`, dossier racine)
 - Installé comme web app (PWA) sur l'écran d'accueil iPhone / Android.
 
+## Façon de travailler (demandée par l'utilisateur)
+
+- Les modifications se font et se testent d'abord **dans Claude** : mettre à jour uniquement la page du jeu dans Claude (artifact « Vingt Indices »).
+- **Ne rien envoyer sur GitHub** tant que l'utilisateur n'a pas validé explicitement (« mets à jour l'app », « envoie la MAJ »…). GitHub = version installée sur les téléphones.
+- À la validation : rebuild (`python3 build_app.py`), commit, push.
+
 ## Fichiers
 
 - `source/vingt-indices.html` : **la source à modifier**. Page autonome (HTML + CSS + JS, sans librairie). Les cartes de base sont dans la constante `BUILTIN` (JSON sur une ligne).
