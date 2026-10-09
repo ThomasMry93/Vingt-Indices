@@ -854,9 +854,15 @@ if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
     navigator.serviceWorker.register("sw.js").then(reg=>{
       const ask=w=>{if(w&&navigator.serviceWorker.controller&&window.VI_showUpdate)window.VI_showUpdate(()=>w.postMessage("skipWaiting"))};
+      // Suit une version en cours de téléchargement jusqu'à ce qu'elle soit prête.
+      const track=w=>{if(w)w.addEventListener("statechange",()=>{if(w.state==="installed")ask(w)})};
       if(reg.waiting)ask(reg.waiting);
-      reg.addEventListener("updatefound",()=>{const w=reg.installing;if(w)w.addEventListener("statechange",()=>{if(w.state==="installed")ask(w)})});
-      document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")reg.update().catch(()=>{})});
+      track(reg.installing);
+      reg.addEventListener("updatefound",()=>track(reg.installing));
+      // Au retour dans l'appli : cherche une nouvelle version, et repropose celle déjà téléchargée.
+      const check=()=>reg.update().catch(()=>{}).then(()=>{if(reg.waiting)ask(reg.waiting)});
+      document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check()});
+      setTimeout(check,3000);
     }).catch(()=>{});
   });
 }
