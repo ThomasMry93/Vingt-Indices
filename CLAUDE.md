@@ -15,7 +15,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 
 - `source/vingt-indices.html` : **la source à modifier**. Page autonome (HTML + CSS + JS, sans librairie). Les cartes de base sont dans la constante `BUILTIN` (JSON sur une ligne).
 - `build_app.py` : génère la version installable à partir de la source → `index.html`, `manifest.webmanifest`, `sw.js` (cache hors connexion, versionné à chaque build). Lancer `python3 build_app.py` depuis la racine du dépôt.
-- `icon-180/192/512.png` : icône (« 20 » entouré de 20 pastilles, une orange).
+- `icon-180/192/512.png` : icône style BD (« ? » rouge façon comics, entouré de 20 pastilles rouge/bleu/blanc cerclées de noir, sur fond jaune à pois).
 - Ne pas éditer `index.html` à la main : modifier la source puis relancer `build_app.py`.
 
 ## Règles du jeu (telles que demandées)
