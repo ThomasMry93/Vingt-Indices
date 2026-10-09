@@ -367,7 +367,7 @@ const LS="vingtIndices.v1";
 function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
 function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style}))}catch(e){}}
 const stored=load();
-let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,players:stored.players||["Léa","Hugo","Inès"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.style||"carton",off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
+let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.style||"carton",off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
 
 const THEMES=["Personnage","Lieu","Chose"];
 const CATC={Personnage:["var(--red)","var(--red-ink)"],Lieu:["var(--blue)","var(--blue-ink)"],Chose:["var(--yellow)","var(--yellow-ink)"]};
