@@ -127,6 +127,8 @@ input[type=checkbox]{width:auto;accent-color:var(--navy)}
 .cluelist li > span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:400 .9rem var(--display);background:var(--cat);color:var(--cat-ink);box-shadow:inset 0 -2px 0 rgba(0,0,0,.14)}
 .cluelist p{min-width:0;font-family:var(--type);font-size:1.02rem;line-height:1.4;padding-top:3px}
 .cluelist li.last{box-shadow:0 0 0 2px var(--cat),0 4px 10px -8px rgba(var(--sh),.5)}
+.cluelist li.unread > span{background:transparent;color:var(--ink-soft);box-shadow:inset 0 0 0 2px var(--used-line)}
+.cluelist li.unread p{color:var(--ink-soft)}
 .cluelist li.pop{animation:pop .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes pop{from{opacity:0;transform:translateY(-10px) rotate(-1.5deg)}}
 
@@ -473,7 +475,7 @@ function judge(found){
 function nextRound(){
   snap();const g=S.game;g.round++;
   if(Math.max(...g.scores)>=g.target){S.view="final";render();window.scrollTo(0,0);return}
-  g.reader=g.round%g.players.length;g.guesser=(g.reader+1)%g.players.length;g.used=[];g.result=null;g.showAnswer=false;render();
+  g.reader=g.round%g.players.length;g.guesser=(g.reader+1)%g.players.length;g.used=[];g.result=null;g.showAnswer=false;g.showAll=false;render();
 }
 
 /* ---------- rendu ---------- */
@@ -537,6 +539,7 @@ function round(){
       <p class="summary">${r.found?`<b>${esc(g.players[r.who])}</b> trouve${r.joker?" avec son jeton":""} après ${n} indice${n>1?"s":""}.`:`Personne n'a trouvé : le lecteur <b>${esc(g.players[g.reader])}</b> prend les 20 points.`}</p>
      </div></section>
      <div class="panel">${scoreList(d)}</div>
+     ${n<20?`<button class="block" data-showall aria-pressed="${!!g.showAll}">${g.showAll?"Masquer les indices non lus":"Afficher tous les indices"}</button>`:""}
      <button class="primary block big" data-nextround>${Math.max(...g.scores)>=g.target?"Voir le classement":"Carte suivante"}</button>`}
   else top=`<section class="gcard">
      <header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">Carte ${g.round+1}</span></header>
@@ -569,12 +572,14 @@ function round(){
  ${top}
  ${g.result?"":board(g.used,"data-n",false)}
  ${jokerBar()}
- ${clueList(c,g.used)}
+ ${g.result&&g.showAll?allClues(c,g.used):clueList(c,g.used)}
+ ${g.result&&g.showAll?`<button class="primary block big" data-nextround>${Math.max(...g.scores)>=g.target?"Voir le classement":"Carte suivante"}</button>`:""}
  ${g.result?"":`<div class="row" style="justify-content:space-between">${undoBtn()}<button class="link" data-adjust>Ajuster les scores</button></div>
  ${S.confirmSkip?`<div class="row"><button class="small" style="flex:1" data-skipno>Garder cette carte</button><button class="small primary" style="flex:1" data-skipyes>Passer, sans points</button></div>`:`<button class="small" data-skip>Passer à la carte suivante</button>`}`}
  ${g.result?`<div class="row" style="justify-content:space-between">${undoBtn()}<button class="link" data-adjust>Ajuster les scores</button></div>`:""}
  ${sheetAll}</div>`}
 
+function allClues(c,used){return `<div class="stack" style="gap:8px"><p class="label">Les 20 indices · ${used.length} lu${used.length>1?"s":""}</p><ol class="cluelist">${c.clues.map((t,i)=>`<li class="${used.includes(i+1)?"":"unread"}"><span>${i+1}</span><p>${esc(t)}</p></li>`).join("")}</ol></div>`}
 function clueList(c,used){if(!used.length)return "";
  return `<div class="stack" style="gap:8px"><p class="label">Indices dévoilés (${used.length})</p><ol class="cluelist">${[...used].sort((x,y)=>x-y).map(k=>`<li class="${k===used[used.length-1]?"last":""}"><span>${k}</span><p>${esc(c.clues[k-1])}</p></li>`).join("")}</ol></div>`}
 function scoreList(deltas){const g=S.game;deltas=deltas||{};const order=g.players.map((p,i)=>({p,s:g.scores[i],i})).sort((a,b)=>b.s-a.s);
@@ -774,6 +779,7 @@ function bind(){
     else if("skip" in d){S.confirmSkip=true;render()}
     else if("skipno" in d){S.confirmSkip=false;render()}
     else if("skipyes" in d){skipCard()}
+    else if("showall" in d){S.game.showAll=!S.game.showAll;S.noFx=true;render();if(S.game.showAll){const l=document.querySelector(".cluelist");if(l)l.scrollIntoView({behavior:REDUCE?"auto":"smooth",block:"start"})}}
     else if("reveal" in d){S.game.showAnswer=!S.game.showAnswer;render()}
     else if("nextround" in d){nextRound();window.scrollTo(0,0)}
     else if("quit" in d){S.view="home";S.game=null;S.hist=[];render()}
