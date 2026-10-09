@@ -592,6 +592,7 @@ function round(){
      <div class="face back" aria-hidden="true"><span class="bignum">${S.clueOpen}</span></div>
      <div class="face fiche" data-fiche><span class="fnum">${S.clueOpen}</span><span class="label">Lisez à voix haute</span><p class="clue" id="typed">${esc(c.clues[S.clueOpen-1])}</p></div>
     </div></div>
+    ${ansRow(c,g.showAnswer,"data-reveal")}
     <p class="who">Réponse de <b>${esc(g.players[g.guesser])}</b> ?</p>
     <div class="row"><button class="ko big" style="flex:1" data-judge="0">Raté</button><button class="ok big" style="flex:1" data-judge="1">Trouvé !</button></div>
     ${jokerBar()}
