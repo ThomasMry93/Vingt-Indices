@@ -24,7 +24,13 @@
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{min-height:100%}
-body{background-color:var(--table);background-image:var(--fibers),var(--grain);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-font-smoothing:antialiased}
+html{background-color:var(--table)}
+/* Le décor de table est une couche fixe plus grande que l'écran : sur iPhone, il couvre aussi
+   la zone de la barre d'état et celle de la barre d'accueil, sans s'arrêter en bas. */
+body::before{content:"";position:fixed;left:0;right:0;top:-120px;bottom:-120px;z-index:-1;pointer-events:none;background-color:var(--table);background-image:var(--fibers),var(--grain)}
+/* Bande unie sous la barre d'état (iOS y floute ce qui passe dessous) */
+body::after{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);z-index:25;pointer-events:none;background:var(--table)}
+body{background:transparent;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-font-smoothing:antialiased}
 .app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 .app.enter > *{animation:enter .34s cubic-bezier(.2,.7,.2,1) both}
 .app.enter > *:nth-child(2){animation-delay:.03s}.app.enter > *:nth-child(3){animation-delay:.06s}.app.enter > *:nth-child(4){animation-delay:.09s}.app.enter > *:nth-child(n+5){animation-delay:.12s}
@@ -309,7 +315,7 @@ html[data-style=journal] .gcard,html[data-style=journal] .fc,html[data-style=jou
   --lift:0 0 0 2.5px #141414,5px 5px 0 #141414;
   color-scheme:light;
 }
-html[data-style=bd] body{background-image:var(--grain);background-size:12px 12px}
+html[data-style=bd] body::before{background-image:var(--grain);background-size:12px 12px}
 html[data-style=bd] .sheet{background-size:12px 12px}
 html[data-style=bd] h1,html[data-style=bd] h2,html[data-style=bd] .catname{letter-spacing:.04em}
 html[data-style=bd] .logo{font-size:3.6rem;-webkit-text-stroke:1.5px #141414;color:#fff;text-shadow:4px 4px 0 #141414}
