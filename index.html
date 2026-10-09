@@ -52,8 +52,11 @@ html{background-color:var(--table)}
 /* Le décor de table est une couche fixe plus grande que l'écran : sur iPhone, il couvre aussi
    la zone de la barre d'état et celle de la barre d'accueil, sans s'arrêter en bas. */
 body::before{content:"";position:fixed;left:0;right:0;top:-120px;bottom:-120px;z-index:-1;pointer-events:none;background-color:var(--table);background-image:var(--fibers),var(--grain)}
-/* Bande unie sous la barre d'état (iOS y floute ce qui passe dessous) */
-body::after{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);z-index:25;pointer-events:none;background:var(--table)}
+/* Bandes unies sous la barre d'état et la barre d'accueil de l'iPhone (iOS floute ce qui passe dessous) ;
+   elles se fondent dans le motif. Sans encoche (ordinateur, page dans Claude), elles ont une hauteur nulle. */
+body::after,html::after{content:"";position:fixed;left:0;right:0;z-index:25;pointer-events:none}
+body::after{top:0;height:calc(env(safe-area-inset-top,0px) * 1.5);background:linear-gradient(var(--table) 62%,transparent)}
+html::after{bottom:0;height:calc(env(safe-area-inset-bottom,0px) * 1.7);background:linear-gradient(to top,var(--table) 55%,transparent)}
 body{background:transparent;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-font-smoothing:antialiased}
 .app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 .app.enter > *{animation:enter .34s cubic-bezier(.2,.7,.2,1) both}
@@ -110,6 +113,10 @@ input[type=checkbox]{width:auto;accent-color:var(--navy)}
 .logo span{display:block;color:var(--red);text-shadow:2px 2px 0 var(--logo-shadow)}
 .tagline{max-width:34ch;color:var(--ink-soft)}
 .home-actions{display:flex;flex-direction:column;gap:10px}
+/* Accueil centré verticalement dans l'écran (le bouton son reste en haut) */
+.app.is-home{min-height:calc(100svh - 52px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+.app.is-home .hero{margin-top:auto}
+.app.is-home .home-actions{margin-bottom:auto}
 
 /* Carte de jeu */
 .gcard{border-radius:12px;background:var(--paper);background-image:var(--paper-grain);box-shadow:var(--lift);overflow:hidden}
@@ -513,7 +520,7 @@ function nextRound(){
 /* ---------- rendu ---------- */
 function render(){
   const a=document.getElementById("app");
-  applyStyle();
+  applyStyle();a.classList.toggle("is-home",S.view==="home");
   a.innerHTML=({home,setup,round,final,cards,editor,rules,browse,styles})[S.view]();
   bind();after();
 }
