@@ -32,6 +32,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 - Polices : Alfa Slab One (titres, numéros), Karla (texte), Special Elite (indices).
 - Animations : carte distribuée, gommette décollée, fiche retournée en 3D puis tapée, tampon Trouvé/Raté, compteurs de points, confettis en papier, podium final. `prefers-reduced-motion` respecté.
 - Sons synthétisés en WebAudio (aucun fichier), bouton pour couper, réglage mémorisé.
+- **Styles au choix** (écran « Style » depuis l'accueil, réglage `style` mémorisé) : Carton (par défaut, décrit ci-dessus), Ardoise (tableau à la craie), Néon (arcade de nuit), BD (bande dessinée pop). Chaque style = un bloc de variables CSS `[data-style=…]` + retouches `html[data-style=…] …` ; liste `STYLES` dans le JS (nom, description, couleur de barre). Pour en ajouter un : un bloc CSS + une entrée dans `STYLES` + sa police dans le lien Google Fonts.
 - Appli installée : la nouvelle version s'installe en arrière-plan puis un bandeau « Mettre à jour » l'applique (`window.VI_showUpdate`, message `skipWaiting` au service worker).
 
 ## Cartes
