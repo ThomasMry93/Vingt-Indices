@@ -47,6 +47,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 - Accueil, Nouvelle partie (joueurs, catégories, score cible, jeton), Lecture libre (indices cachés ou tous affichés, filtre par catégorie), Règles.
 - Écran Cartes : liste complète avec recherche (sans accents ni articles) et filtre de catégorie ; ouvrir (indices cachés par défaut), modifier (nom, catégorie, 20 indices), supprimer (cartes de base restaurables) ; cartes perso ; copier/importer un code de cartes ; **Exporter toutes les cartes** (fichier JSON `format: "vingt-indices"`, avec `source` = base / base-modifiée / perso et `removedBaseIds`).
 - Pendant une manche : liste des indices dévoilés **triée par numéro**, le dernier lu mis en évidence.
+- Fiche d'indice ouverte : ligne de réponse masquée par défaut avec le bouton Afficher/Masquer (même réglage que sur la carte).
 - Fin de carte (trouvée ou ratée) : bouton **Afficher tous les indices** (les 20, ceux non lus en retrait), avec un second bouton « Carte suivante » sous la liste.
 - Données des joueurs (cartes perso, modifications, suppressions, réglages) : `localStorage`, propre à chaque téléphone.
 
