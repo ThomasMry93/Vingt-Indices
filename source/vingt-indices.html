@@ -1,5 +1,5 @@
 <title>Vingt Indices</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Karla:wght@400;600;800&family=Special+Elite&family=Cabin+Sketch:wght@700&family=Patrick+Hand&family=Bungee&family=VT323&family=Bangers&family=Comic+Neue:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Karla:wght@400;600;800&family=Special+Elite&family=Playfair+Display:wght@700;900&family=UnifrakturMaguntia&family=Old+Standard+TT:wght@400;700&family=IM+Fell+English:ital@0;1&family=Bangers&family=Comic+Neue:wght@700&display=swap">
 <style>
 /* Layout : une colonne mobile posée sur une table en carton kraft ; cartes en carton blanc imprimé,
    planche de 20 gommettes à la couleur de la catégorie, indices sur fiches tapées à la machine. */
@@ -219,77 +219,70 @@ details summary{cursor:pointer}
    Chaque style redéfinit les variables ; les retouches ciblent html[data-style=…] uniquement,
    pour que les aperçus de l'écran Style (qui portent aussi data-style) ne se contaminent pas. */
 
-/* Ardoise : tableau d'école, craie et éponge */
-[data-style=ardoise]{
-  --table:#2f4a3d; --table-2:#26402f; --paper:#35503f; --paper-2:#2a4234;
-  --ink:#f3f0e4; --ink-soft:#b7c4b5; --rule:#557060; --rule-2:#6f8a79;
-  --navy:#f3f0e4; --navy-2:#c9c4b0; --title:#f3f0e4;
-  --red:#ee8f84; --blue:#86bde6; --yellow:#f2d57e;
-  --red-ink:#1f2f26; --blue-ink:#1f2f26; --yellow-ink:#1f2f26;
-  --ok:#8fd19e; --ok-2:#5d9f6e; --ko:#f0897f; --ko-2:#b9584f;
-  --sh:8,18,12; --scrim:rgba(10,20,14,.65); --logo-shadow:rgba(0,0,0,.25);
-  --margin:rgba(238,143,132,.45); --ruled:rgba(243,240,228,.12); --used-ink:rgba(243,240,228,.4); --used-line:rgba(243,240,228,.3);
-  --display:"Cabin Sketch","Chalkboard SE","Comic Sans MS",cursive;
-  --body:"Karla",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --type:"Patrick Hand","Chalkboard SE","Comic Sans MS",cursive;
-  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --fibers:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .02' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .14 -.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
-  --paper-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
-  --lift:0 0 0 1.5px rgba(243,240,228,.18),0 10px 20px -12px rgba(0,0,0,.6);
-  color-scheme:dark;
+/* Journal : gazette des années 40, encre noire sur papier journal jauni */
+[data-style=journal]{
+  --table:#e3d7b8; --table-2:#d6c8a3; --paper:#f3ebd5; --paper-2:#e9dec2;
+  --ink:#1d1b17; --ink-soft:#5a5244; --rule:#b5a887; --rule-2:#1d1b17;
+  --navy:#1d1b17; --navy-2:#000; --title:#1d1b17;
+  --red:#9e2f24; --blue:#2e4a66; --yellow:#bf8d2c;
+  --red-ink:#f3ebd5; --blue-ink:#f3ebd5; --yellow-ink:#1d1b17;
+  --ok:#3d5a36; --ok-2:#1d1b17; --ko:#9e2f24; --ko-2:#1d1b17;
+  --sh:60,45,20; --scrim:rgba(40,32,18,.6); --logo-shadow:transparent;
+  --margin:rgba(29,27,23,.55); --ruled:transparent; --used-ink:rgba(29,27,23,.35); --used-line:rgba(29,27,23,.3);
+  --display:"Playfair Display","Didot","Bodoni 72",Georgia,serif;
+  --body:"Old Standard TT","Times New Roman",Georgia,serif;
+  --type:"IM Fell English","Old Standard TT",Georgia,serif;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .2 0 0 0 0 .1 0 0 0 .2 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --fibers:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .38 0 0 0 0 .12 0 0 0 .5 -.18'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --paper-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .24 0 0 0 0 .12 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  --lift:0 0 0 1px rgba(29,27,23,.55),0 6px 14px -10px rgba(60,45,20,.7);
+  color-scheme:light;
 }
-html[data-style=ardoise] body{background-color:#24392e}
-html[data-style=ardoise] .app{background:none}
-html[data-style=ardoise] h1,html[data-style=ardoise] h2{font-weight:700}
-html[data-style=ardoise] .logo span{color:var(--yellow)}
-html[data-style=ardoise] button{border-style:dashed}
-html[data-style=ardoise] button.primary,html[data-style=ardoise] .chipt.on{color:#1f2f26;border-style:solid}
-html[data-style=ardoise] button.ok{color:#1f2f26}
-html[data-style=ardoise] .n{background-image:none;box-shadow:0 0 0 2px rgba(243,240,228,.25),0 2px 0 rgba(0,0,0,.3);font-weight:700}
-html[data-style=ardoise] .clue,html[data-style=ardoise] .cluelist p{font-size:1.5rem}
-html[data-style=ardoise] .cluelist p{font-size:1.15rem}
-html[data-style=ardoise] .stamp{mix-blend-mode:normal;font-weight:700}
-html[data-style=ardoise] .toast{background:#f3f0e4;color:#1f2f26}
-
-/* Néon : salle d'arcade de nuit */
-[data-style=neon]{
-  --table:#120f24; --table-2:#0c0a1a; --paper:#1d1938; --paper-2:#16132d;
-  --ink:#f4f0ff; --ink-soft:#a79fd0; --rule:#3a3366; --rule-2:#5a4f9a;
-  --navy:#ff3d8b; --navy-2:#a81d58; --title:#f4f0ff;
-  --red:#ff4f7b; --blue:#31d4ff; --yellow:#ffd23f;
-  --red-ink:#16112b; --blue-ink:#16112b; --yellow-ink:#16112b;
-  --ok:#21d48a; --ok-2:#0f8a57; --ko:#ff5b6e; --ko-2:#a8283a;
-  --sh:0,0,0; --scrim:rgba(6,4,16,.75); --logo-shadow:rgba(255,61,139,.6);
-  --margin:rgba(255,79,123,.5); --ruled:rgba(49,212,255,.14); --used-ink:rgba(167,159,208,.5); --used-line:rgba(167,159,208,.35);
-  --display:"Bungee","Arial Black",Impact,sans-serif;
-  --body:"Karla",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --type:"VT323","Courier New",Courier,monospace;
-  --grain:radial-gradient(ellipse at 50% -10%,rgba(255,61,139,.22),transparent 60%);
-  --fibers:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M40 0H0v40' fill='none' stroke='%2331d4ff' stroke-opacity='.07' stroke-width='1'/%3E%3C/svg%3E");
-  --paper-grain:linear-gradient(transparent,transparent);
-  --lift:0 0 0 1px rgba(49,212,255,.25),0 0 22px -6px rgba(49,212,255,.35),0 12px 24px -12px rgba(0,0,0,.8);
-  color-scheme:dark;
-}
-html[data-style=neon] body{background-image:var(--grain),var(--fibers);background-attachment:fixed}
-html[data-style=neon] .logo{font-size:2.6rem;text-shadow:0 0 14px rgba(244,240,255,.45)}
-html[data-style=neon] .logo span{color:var(--navy);text-shadow:0 0 6px var(--navy),0 0 22px var(--navy)}
-html[data-style=neon] h2{text-shadow:0 0 12px rgba(49,212,255,.5)}
-html[data-style=neon] .final-title span{text-shadow:0 0 18px var(--red)}
-html[data-style=neon] button{box-shadow:0 0 0 1px var(--rule-2),0 3px 0 var(--rule)}
-html[data-style=neon] button.primary,html[data-style=neon] .chipt.on{color:#fff;box-shadow:0 3px 0 var(--navy-2),0 0 18px -2px var(--navy)}
-html[data-style=neon] button.ok{box-shadow:0 3px 0 var(--ok-2),0 0 16px -3px var(--ok)}
-html[data-style=neon] button.ko{box-shadow:0 3px 0 var(--ko-2),0 0 14px -4px var(--ko)}
-html[data-style=neon] button.link,html[data-style=neon] .seg button,html[data-style=neon] .linkrow{box-shadow:none}
-html[data-style=neon] .n{background-image:none;box-shadow:0 0 10px -1px var(--cat),inset 0 -3px 0 rgba(0,0,0,.2)}
-html[data-style=neon] .n.used{box-shadow:none}
-html[data-style=neon] .band{background-image:none;box-shadow:0 0 18px -2px var(--cat)}
-html[data-style=neon] .pl.turnp{box-shadow:0 0 0 2px var(--cat),0 0 14px -2px var(--cat)}
-html[data-style=neon] .cluelist li.last{box-shadow:0 0 0 2px var(--cat),0 0 14px -4px var(--cat)}
-html[data-style=neon] .clue{font-size:1.8rem;color:#c8f6ff;text-shadow:0 0 8px rgba(49,212,255,.55)}
-html[data-style=neon] .cluelist p{font-size:1.32rem;line-height:1.2}
-html[data-style=neon] .stamp{mix-blend-mode:normal;text-shadow:0 0 10px currentColor;box-shadow:0 0 14px -2px currentColor}
-html[data-style=neon] .face.back{background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.14) 0 7px,transparent 7px 15px)}
-html[data-style=neon] .toast{background:var(--navy);color:#fff}
+html[data-style=journal] body{font-size:17px}
+html[data-style=journal] h1,html[data-style=journal] h2{font-weight:900}
+html[data-style=journal] h2{font-size:1.85rem;border-bottom:3px double var(--ink);padding-bottom:6px}
+html[data-style=journal] .logo{font:400 3.3rem/.95 "UnifrakturMaguntia","Old English Text MT",serif;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:10px 4px 8px;width:100%;max-width:340px}
+html[data-style=journal] .logo span{display:inline;margin-left:.22em;color:var(--ink);text-shadow:none}
+html[data-style=journal] .logo::after{content:"Édition spéciale · Paris · 20 centimes";display:block;margin-top:8px;padding-top:5px;border-top:1px solid var(--ink);font:700 .62rem/1.4 var(--body);letter-spacing:.18em;text-transform:uppercase}
+html[data-style=journal] .tagline{font-style:italic;text-align:justify;text-align-last:center;hyphens:auto}
+html[data-style=journal] .final-title{font-style:italic}
+html[data-style=journal] .final-title span{font-style:normal;text-transform:uppercase;letter-spacing:.04em}
+html[data-style=journal] .label{font-family:var(--body);letter-spacing:.16em}
+html[data-style=journal] button{border-radius:2px;border:1.5px solid var(--ink);box-shadow:2px 2px 0 rgba(29,27,23,.75);font-family:var(--body);font-weight:700;letter-spacing:.03em}
+html[data-style=journal] button.big{text-transform:uppercase;letter-spacing:.12em;font-size:.98rem}
+html[data-style=journal] button.primary,html[data-style=journal] .chipt.on{color:var(--paper);box-shadow:2px 2px 0 rgba(29,27,23,.4)}
+html[data-style=journal] button.ok,html[data-style=journal] button.ko{box-shadow:2px 2px 0 var(--ink)}
+html[data-style=journal] button.ko{background:var(--paper)}
+html[data-style=journal] button.link,html[data-style=journal] .seg button,html[data-style=journal] .linkrow{border:0;box-shadow:none}
+html[data-style=journal] .icon{border-radius:50%}
+html[data-style=journal] input,html[data-style=journal] select,html[data-style=journal] textarea{border-radius:2px;border-color:var(--ink)}
+html[data-style=journal] .panel,html[data-style=journal] .gcard,html[data-style=journal] .sheetboard,html[data-style=journal] .fc,html[data-style=journal] .face,html[data-style=journal] .pod .blk{border-radius:2px}
+html[data-style=journal] .panel{border-top:4px double var(--ink)}
+html[data-style=journal] .band{background-image:none;border-bottom:3px double var(--paper);font-family:var(--display)}
+html[data-style=journal] .band .catname{font-weight:900;text-transform:uppercase;letter-spacing:.14em;font-size:.95rem}
+html[data-style=journal] .turnline strong,html[data-style=journal] .answer,html[data-style=journal] .answerline{font-weight:900}
+html[data-style=journal] .sheetboard{box-shadow:inset 0 0 0 1px rgba(29,27,23,.5)}
+html[data-style=journal] .n{font-weight:900;background-image:radial-gradient(rgba(0,0,0,.22) 1px,transparent 1.4px);background-size:4px 4px;box-shadow:0 0 0 1.5px var(--ink),0 2px 3px -2px rgba(60,45,20,.6)}
+html[data-style=journal] .n.used{box-shadow:none}
+html[data-style=journal] .pl{border-radius:2px;box-shadow:0 0 0 1px rgba(29,27,23,.45)}
+html[data-style=journal] .pl.turnp{box-shadow:0 0 0 2.5px var(--cat)}
+html[data-style=journal] .pl b,html[data-style=journal] .scores b,html[data-style=journal] .pod .pscore{font-weight:900}
+html[data-style=journal] .cluelist li{border-radius:1px;box-shadow:0 0 0 1px rgba(29,27,23,.4),2px 3px 6px -4px rgba(60,45,20,.6)}
+html[data-style=journal] .cluelist li.last{box-shadow:0 0 0 2px var(--cat)}
+html[data-style=journal] .cluelist li > span,html[data-style=journal] .fnum{font-weight:900}
+html[data-style=journal] .cluelist p{font-size:1.12rem}
+html[data-style=journal] .clue{font-size:1.55rem;font-style:italic}
+html[data-style=journal] .fiche{clip-path:polygon(0 1%,4% 0,9% .8%,15% .1%,22% .9%,30% .2%,38% 1%,47% .1%,55% .8%,63% 0,72% .9%,80% .2%,88% 1%,95% .1%,100% .7%,100% 99%,96% 100%,90% 99.2%,83% 100%,75% 99.1%,66% 99.9%,58% 99%,49% 99.8%,40% 99.1%,31% 100%,23% 99.2%,15% 99.9%,8% 99%,0 100%)}
+html[data-style=journal] .fiche .label{border-bottom:1px solid var(--ink);margin-bottom:6px}
+html[data-style=journal] .face.back{background-image:radial-gradient(rgba(0,0,0,.22) 1.2px,transparent 1.6px);background-size:6px 6px;box-shadow:var(--lift),inset 0 0 0 8px var(--cat),inset 0 0 0 9.5px var(--paper)}
+html[data-style=journal] .bignum{font-weight:900;border-radius:50%;box-shadow:0 0 0 1.5px var(--ink)}
+html[data-style=journal] .stamp{font-family:var(--body);font-weight:700;border-width:2.5px;border-style:double;border-width:5px;border-radius:2px;letter-spacing:.14em}
+html[data-style=journal] .delta{background:transparent;border:1px solid currentColor;border-radius:2px}
+html[data-style=journal] .ansrow{border-radius:2px;box-shadow:inset 0 0 0 1px rgba(29,27,23,.4)}
+html[data-style=journal] .scores div,html[data-style=journal] .card-item,html[data-style=journal] .meter{border-bottom-style:solid;border-top-style:solid;border-color:rgba(29,27,23,.35)}
+html[data-style=journal] .scores div{border-top:0}
+html[data-style=journal] .overlay .sheet{border-radius:3px}
+html[data-style=journal] .toast{border-radius:2px;font-family:var(--body)}
 
 /* BD : planche de bande dessinée pop, aplats et gros traits */
 [data-style=bd]{
@@ -374,8 +367,7 @@ const THEMES=["Personnage","Lieu","Chose"];
 const CATC={Personnage:["var(--red)","var(--red-ink)"],Lieu:["var(--blue)","var(--blue-ink)"],Chose:["var(--yellow)","var(--yellow-ink)"]};
 const STYLES=[
   {id:"carton",name:"Carton",desc:"Table kraft, gommettes et fiches tapées à la machine",bar:"#d8c29c",clue:"Je suis né en Corse."},
-  {id:"ardoise",name:"Ardoise",desc:"Tableau d'école, craie et couleurs pastel",bar:"#2f4a3d",clue:"On m'écrit à la craie."},
-  {id:"neon",name:"Néon",desc:"Salle d'arcade de nuit, lumières qui brillent",bar:"#120f24",clue:"Je brille dans la nuit."},
+  {id:"journal",name:"Journal",desc:"Gazette des années 40, encre noire sur papier jauni",bar:"#e9dfc6",clue:"On m'achète au kiosque."},
   {id:"bd",name:"BD",desc:"Bande dessinée pop, aplats et gros traits",bar:"#ffd94a",clue:"Je fais « Boum ! »."}];
 function applyStyle(){if(!STYLES.some(t=>t.id===S.style))S.style="carton";const st=STYLES.find(t=>t.id===S.style);
   document.documentElement.dataset.style=st.id;const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=st.bar}
