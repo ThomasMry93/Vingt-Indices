@@ -434,7 +434,7 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 <div id="toast" class="toast" hidden></div>
 <div class="mascot" id="mascot" aria-hidden="true">
   <div class="mbubble" id="mascotLine"></div>
-  <svg viewBox="-10 -14 144 180">
+  <svg viewBox="-10 -24 144 190">
     <g class="rig" stroke="#141414" stroke-linecap="round" stroke-linejoin="round">
       <!-- jambes et baskets -->
       <path d="M57 128 L53 144 M69 128 L73 144" stroke-width="5" fill="none"/>
@@ -837,7 +837,7 @@ function mood(){const g=S.game;
 function placeMascot(el,line){
   const W=innerWidth,H=innerHeight,cs=getComputedStyle(document.documentElement);
   const st=(parseFloat(cs.paddingTop)||0)+6,sb=(parseFloat(cs.paddingBottom)||0)+6;
-  const w=el.offsetWidth||68,h=w*1.25;
+  const w=el.offsetWidth||68,h=w*190/144;
   const lineOn=!line.hidden;
   const bw=lineOn?Math.min(line.offsetWidth||150,W-24):0,bh=lineOn?(line.offsetHeight||30):0;
   const ov=document.querySelector(".overlay .sheet");
