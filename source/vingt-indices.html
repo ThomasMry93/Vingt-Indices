@@ -365,13 +365,18 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 .sw-desc{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:600;color:var(--ink-soft)}
 .sw-desc b{color:var(--ink);font-weight:800}
 
-/* Mascotte « ? » : surgit en bas à droite quand l'écran change, réagit, puis repart */
-.mascot{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));width:92px;z-index:50;pointer-events:none;transform:translateY(160%)}
+/* Mascotte « ? » : surgit quand l'écran change, à l'endroit le plus dégagé (placement calculé en JS), réagit, puis repart */
+.mascot{position:fixed;left:0;top:0;width:68px;z-index:50;pointer-events:none;transform:scale(0);visibility:hidden}
+.mascot.show,.mascot.leave{visibility:visible}
 .mascot.show{animation:m-in .6s ease-out forwards}
 .mascot.leave{animation:m-out .35s ease-in forwards}
 .mascot svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(3px 4px 0 rgba(0,0,0,.45))}
-.mbubble{position:absolute;right:78%;bottom:86%;width:max-content;max-width:min(210px,58vw);background:#fff;color:#141414;border:3px solid #141414;border-radius:16px 16px 4px 16px;padding:8px 12px;font:400 1.02rem/1.15 "Bangers","Karla",sans-serif;letter-spacing:.04em;box-shadow:3px 3px 0 #141414;transition:opacity .15s,transform .15s}
+.mbubble{position:absolute;right:78%;bottom:86%;width:max-content;max-width:min(190px,56vw);background:#fff;color:#141414;border:3px solid #141414;border-radius:16px 16px 4px 16px;padding:8px 12px;font:400 .95rem/1.15 "Bangers","Karla",sans-serif;letter-spacing:.04em;box-shadow:3px 3px 0 #141414;transition:opacity .15s,transform .15s}
 .mascot.leave .mbubble{opacity:0;transform:scale(.6)}
+.mascot.bub-r .mbubble{right:auto;left:78%;border-radius:16px 16px 16px 4px}
+.mascot.bub-down .mbubble{bottom:auto;top:92%;border-radius:4px 16px 16px 16px}
+.mascot.bub-r.bub-down .mbubble{border-radius:16px 4px 16px 16px}
+.mascot.bub-mid .mbubble{bottom:auto;top:20%}
 .mascot .rig{transform-box:view-box;transform-origin:63px 148px}
 .mascot .arm-l{transform-box:view-box;transform-origin:42px 106px;transition:transform .3s}
 .mascot .arm-r{transform-box:view-box;transform-origin:84px 106px;transition:transform .3s}
@@ -398,14 +403,14 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 .mascot.sad .brow-l{transform:rotate(-16deg)}.mascot.sad .brow-r{transform:rotate(16deg)}
 .mascot.sad .arm-l{transform:rotate(-110deg)}.mascot.sad .arm-r{transform:rotate(110deg)}
 .mascot.point .arm-r{transform:rotate(-55deg)}
-@keyframes m-in{0%{transform:translateY(160%) rotate(-200deg) scale(.5)}60%{transform:translateY(-8%) rotate(12deg) scale(1.15,.9)}80%{transform:translateY(0) rotate(-4deg) scale(.95,1.06)}100%{transform:translateY(0) rotate(0) scale(1)}}
-@keyframes m-out{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-10%) scale(.9,1.12)}100%{transform:translateY(260%);visibility:hidden}}
+@keyframes m-in{0%{transform:rotate(-200deg) scale(0)}60%{transform:rotate(12deg) scale(1.15,.9)}80%{transform:rotate(-4deg) scale(.95,1.06)}100%{transform:rotate(0) scale(1)}}
+@keyframes m-out{0%{transform:scale(1)}30%{transform:translateY(-8%) scale(.9,1.12)}100%{transform:translateY(30%) scale(0);visibility:hidden}}
 @keyframes m-wave{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(28deg)}}
 @keyframes m-jump{0%,100%{transform:translateY(0) scaleY(1)}15%{transform:translateY(2px) scaleY(.92)}45%{transform:translateY(-14px) scaleY(1.04)}70%{transform:translateY(0) scaleY(.96)}}
 @keyframes m-shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-4px) rotate(-4deg)}40%{transform:translateX(4px) rotate(4deg)}60%{transform:translateX(-3px) rotate(-3deg)}80%{transform:translateX(3px) rotate(2deg)}}
 @keyframes m-tilt{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(5deg)}}
 @keyframes m-bounce{from{transform:translateY(0) scale(1.08,.9)}to{transform:translateY(-16px) scale(1)}}
-@media (prefers-reduced-motion:reduce){.mascot,.mascot *{animation:none!important}.mascot{transform:none;opacity:0;transition:opacity .2s}.mascot.show{opacity:1}.mascot.leave{opacity:0}}
+@media (prefers-reduced-motion:reduce){.mascot,.mascot *{animation:none!important}.mascot{transform:none;opacity:0;transition:opacity .2s;visibility:visible}.mascot.show{opacity:1}.mascot.leave{opacity:0}}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;transition:none!important}}
 </style>
@@ -815,15 +820,50 @@ function mood(){const g=S.game;
     }
   }
   return null}
+/* Choisit, parmi quelques emplacements (coins et bords), celui où la mascotte et sa bulle
+   recouvrent le moins de boutons et de texte. */
+function placeMascot(el,line){
+  const W=innerWidth,H=innerHeight,cs=getComputedStyle(document.documentElement);
+  const st=(parseFloat(cs.paddingTop)||0)+6,sb=(parseFloat(cs.paddingBottom)||0)+6;
+  const w=el.offsetWidth||68,h=w*1.25;
+  const lineOn=!line.hidden;
+  const bw=lineOn?Math.min(line.offsetWidth||150,W-24):0,bh=lineOn?(line.offsetHeight||30):0;
+  const ov=document.querySelector(".overlay .sheet");
+  const root=ov||document.getElementById("app");
+  const sel="button,input,select,textarea,h1,h2,p,li,.label,.n,.pl,.fc,.ansrow,.band,.stamp,.scores>div,.pod,.mbubble";
+  // boutons, titres et gommettes comptent double : c'est ce qu'il faut le moins cacher
+  const heavy=e=>e.matches("button,input,select,textarea,h1,h2,.n,.fc,.stamp");
+  const rects=[...root.querySelectorAll(sel)].filter(e=>!e.closest(".mascot")).map(e=>{const r=e.getBoundingClientRect();r.k=heavy(e)?2:1;return r}).filter(r=>r.width&&r.height&&r.bottom>0&&r.top<H);
+  if(ov)rects.push(...[...ov.querySelectorAll(".face")].map(e=>{const r=e.getBoundingClientRect();r.k=2;return r}));
+  const inter=(a,b)=>Math.max(0,Math.min(a.r,b.right)-Math.max(a.l,b.left))*Math.max(0,Math.min(a.b,b.bottom)-Math.max(a.t,b.top));
+  const xs=[W-w-8,8],ys=[H-h-sb,H*.58-h/2,H*.36-h/2,st+44,st+4];
+  let best=null,k=0;
+  ys.forEach(y=>xs.forEach(x=>["up","mid","down"].forEach(v=>{
+    const right=x>W/2,boxes=[{l:x,t:y,r:x+w,b:y+h}],rank=k++;
+    if(lineOn){const bl=right?x+w*.22-bw:x+w*.78,bt=v==="down"?y+h*.92:v==="mid"?y+h*.2:y+h*.14-bh;
+      if(bl<4||bl+bw>W-4||bt<st||bt+bh>H-sb)return;boxes.push({l:bl,t:bt,r:bl+bw,b:bt+bh})}
+    else if(v!=="up")return;
+    let score=0;boxes.forEach(bx=>rects.forEach(r=>score+=inter(bx,r)*r.k));
+    score+=rank*15; // à égalité : de préférence en bas à droite
+    if(!best||score<best.score)best={score,x,y,right,v};
+  })));
+  if(!best)best={x:W-w-8,y:H-h-sb,right:true,v:"up"};
+  el.style.left=best.x+"px";el.style.top=best.y+"px";
+  el.classList.toggle("bub-r",!best.right);el.classList.toggle("bub-down",best.v==="down");el.classList.toggle("bub-mid",best.v==="mid");
+  el.style.transformOrigin="50% 100%";
+}
 function react(){const el=document.getElementById("mascot"),line=document.getElementById("mascotLine");if(!el)return;
   const g=S.game;
   const key=S.view==="round"&&g?["round",g.round,g.skip||0,g.used.length,S.clueOpen||0,g.result?1:0].join("|"):S.view;
   if(key===mascotKey)return;mascotKey=key;
   const m=mood();clearTimeout(mascotTimer);
   if(!m){el.className="mascot";return}
-  line.textContent=m[1];line.hidden=!m[1];
-  el.className="mascot "+m[0];void el.offsetWidth;el.classList.add("show");
-  mascotTimer=setTimeout(()=>el.classList.replace("show","leave"),2800)}
+  if(el.classList.contains("show"))el.classList.replace("show","leave");
+  // on attend que l'écran ait fini ses animations d'entrée pour mesurer l'endroit le plus dégagé
+  mascotTimer=setTimeout(()=>{
+    line.textContent=m[1];line.hidden=!m[1];
+    el.className="mascot "+m[0];placeMascot(el,line);void el.offsetWidth;el.classList.add("show");
+    mascotTimer=setTimeout(()=>el.classList.replace("show","leave"),2800)},REDUCE?0:480)}
 
 /* ---------- animations après rendu ---------- */
 let PREV={};
