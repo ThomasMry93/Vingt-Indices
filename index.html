@@ -389,6 +389,21 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 .sw-desc{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:600;color:var(--ink-soft)}
 .sw-desc b{color:var(--ink);font-weight:800}
 
+/* Accueil : la mascotte en grand au centre, qui se dandine, salue et fait rebondir sa balle */
+.mbig{position:relative;left:-8px;width:170px;margin:4px auto 2px}
+.mbig svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.4))}
+.mbig .rig{transform-box:view-box;transform-origin:63px 148px;animation:m-bob 2.6s ease-in-out infinite}
+.mbig .arm-r{transform-box:view-box;transform-origin:75px 106px;animation:m-hello 3.2s ease-in-out infinite}
+.mbig .m-open,.mbig .m-sad,.mbig .m-wavy{display:none}
+.mbig .ball{transform-box:fill-box;transform-origin:center bottom;animation:m-bounce .45s ease-in-out infinite alternate}
+.mbig .pupils{animation:m-look 5s ease-in-out infinite}
+.hbubble{position:absolute;left:-68px;top:-6px;background:#fff;color:#141414;border:3px solid #141414;border-radius:16px 16px 4px 16px;padding:7px 12px;font:400 1.05rem/1.1 "Bangers","Karla",sans-serif;letter-spacing:.04em;box-shadow:3px 3px 0 #141414;white-space:nowrap;transform:rotate(-6deg);animation:m-pop .5s cubic-bezier(.3,1.6,.5,1) .4s both}
+.enter .mbig{animation:m-in .7s ease-out both}
+@keyframes m-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes m-hello{0%,55%,100%{transform:rotate(0)}65%,85%{transform:rotate(30deg)}75%,95%{transform:rotate(-8deg)}}
+@keyframes m-look{0%,40%,100%{transform:translate(0,0)}50%,70%{transform:translate(-3px,1px)}80%,90%{transform:translate(3px,-1px)}}
+@keyframes m-pop{from{transform:rotate(-6deg) scale(0)}}
+
 /* Mascotte « ? » : surgit quand l'écran change, à l'endroit le plus dégagé (placement calculé en JS), réagit, puis repart */
 .mascot{position:fixed;left:0;top:0;width:68px;z-index:50;pointer-events:none;transform:scale(0);visibility:hidden}
 .mascot.show,.mascot.leave{visibility:visible}
@@ -402,10 +417,10 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 .mascot.bub-r.bub-down .mbubble{border-radius:16px 4px 16px 16px}
 .mascot.bub-mid .mbubble{bottom:auto;top:20%}
 .mascot .rig{transform-box:view-box;transform-origin:63px 148px}
-.mascot .arm-l{transform-box:view-box;transform-origin:42px 106px;transition:transform .3s}
-.mascot .arm-r{transform-box:view-box;transform-origin:84px 106px;transition:transform .3s}
-.mascot .brow-l{transform-box:view-box;transform-origin:47px 9px;transition:transform .3s}
-.mascot .brow-r{transform-box:view-box;transform-origin:76px 8px;transition:transform .3s}
+.mascot .arm-l{transform-box:view-box;transform-origin:51px 106px;transition:transform .3s}
+.mascot .arm-r{transform-box:view-box;transform-origin:75px 106px;transition:transform .3s}
+.mascot .brow-l{transform-box:view-box;transform-origin:52px -9px;transition:transform .3s}
+.mascot .brow-r{transform-box:view-box;transform-origin:74px -10px;transition:transform .3s}
 .mascot .brows,.mascot .pupils{transition:transform .3s}
 .mascot .ball{transform-box:fill-box;transform-origin:center bottom}
 .mascot.show .ball{animation:m-bounce .42s ease-in-out .5s 6 alternate}
@@ -443,34 +458,34 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 <div id="toast" class="toast" hidden></div>
 <div class="mascot" id="mascot" aria-hidden="true">
   <div class="mbubble" id="mascotLine"></div>
-  <svg viewBox="-10 -14 144 180">
+  <svg viewBox="-10 -24 144 190">
     <g class="rig" stroke="#141414" stroke-linecap="round" stroke-linejoin="round">
       <!-- jambes et baskets -->
-      <path d="M56 128 L52 144 M70 128 L74 144" stroke-width="5" fill="none"/>
+      <path d="M57 128 L53 144 M69 128 L73 144" stroke-width="5" fill="none"/>
       <path d="M38 148 Q38 139 51 140 Q61 141 62 148 Z" fill="#fff" stroke-width="4"/>
       <path d="M66 148 Q67 141 77 140 Q90 139 90 148 Z" fill="#fff" stroke-width="4"/>
       <path d="M43 144 L57 144 M71 144 L85 144" stroke="#1f8fff" stroke-width="3"/>
-      <!-- corps : un « ? » bien gras -->
-      <path d="M30 48 C30 10 96 8 96 46 C96 72 63 70 63 98 L63 120" stroke-width="56" fill="none"/>
-      <path d="M30 48 C30 10 96 8 96 46 C96 72 63 70 63 98 L63 120" stroke="#ff3b3b" stroke-width="46" fill="none"/>
-      <path d="M100 30 C108 44 106 62 96 72" stroke="#c81f1f" stroke-width="6" fill="none" opacity=".5"/>
-      <ellipse cx="20" cy="34" rx="6" ry="3.5" fill="#fff" opacity=".45" stroke="none" transform="rotate(-50 20 34)"/>
+      <!-- corps : un « ? » élancé -->
+      <path d="M30 42 C30 6 98 4 98 42 C98 70 63 70 63 98 L63 122" stroke-width="38" fill="none"/>
+      <path d="M30 42 C30 6 98 4 98 42 C98 70 63 70 63 98 L63 122" stroke="#ff3b3b" stroke-width="28" fill="none"/>
+      <path d="M104 30 C109 42 107 56 99 64" stroke="#c81f1f" stroke-width="5" fill="none" opacity=".5"/>
+      <ellipse cx="22" cy="34" rx="5" ry="3" fill="#fff" opacity=".45" stroke="none" transform="rotate(-60 22 34)"/>
       <!-- bras et gants -->
-      <g class="arm-l"><path d="M42 106 Q26 104 20 88" stroke-width="5" fill="none"/><circle cx="19" cy="84" r="8.5" fill="#fff" stroke-width="4"/></g>
-      <g class="arm-r"><path d="M84 106 Q100 104 106 88" stroke-width="5" fill="none"/><circle cx="107" cy="84" r="8.5" fill="#fff" stroke-width="4"/></g>
-      <!-- yeux et sourcils -->
-      <ellipse cx="49" cy="28" rx="11" ry="13" fill="#fff" stroke-width="4"/>
-      <ellipse cx="75" cy="27" rx="11" ry="13" fill="#fff" stroke-width="4"/>
-      <g class="pupils" stroke="none"><circle cx="52" cy="30" r="4.8" fill="#141414"/><circle cx="73" cy="29" r="4.8" fill="#141414"/><circle cx="53.5" cy="28.5" r="1.6" fill="#fff"/><circle cx="74.5" cy="27.5" r="1.6" fill="#fff"/></g>
-      <g class="brows"><path class="brow-l" d="M39 11 Q47 6 56 9" stroke-width="5" fill="none"/><path class="brow-r" d="M67 8 Q76 5 84 10" stroke-width="5" fill="none"/></g>
+      <g class="arm-l"><path d="M51 106 Q34 104 26 88" stroke-width="5" fill="none"/><circle cx="25" cy="84" r="8" fill="#fff" stroke-width="4"/></g>
+      <g class="arm-r"><path d="M75 106 Q92 104 100 88" stroke-width="5" fill="none"/><circle cx="101" cy="84" r="8" fill="#fff" stroke-width="4"/></g>
+      <!-- grands yeux qui dépassent, sourcils -->
+      <ellipse cx="53" cy="8" rx="9" ry="10.5" fill="#fff" stroke-width="3.5"/>
+      <ellipse cx="73" cy="7" rx="9" ry="10.5" fill="#fff" stroke-width="3.5"/>
+      <g class="pupils" stroke="none"><circle cx="55.5" cy="10" r="4" fill="#141414"/><circle cx="71" cy="9" r="4" fill="#141414"/><circle cx="56.8" cy="8.6" r="1.3" fill="#fff"/><circle cx="72.3" cy="7.6" r="1.3" fill="#fff"/></g>
+      <g class="brows"><path class="brow-l" d="M45 -7 Q52 -11 59 -9" stroke-width="4.5" fill="none"/><path class="brow-r" d="M67 -10 Q74 -12 81 -8" stroke-width="4.5" fill="none"/></g>
       <!-- bouches -->
-      <g class="m-smile"><path d="M48 46 Q62 66 78 45 Z" fill="#141414" stroke-width="3.5"/><path d="M51 47 L75 46.5 L73 51 L53 51.5 Z" fill="#fff" stroke="none"/><path d="M56 57 Q63 53 70 56 Q63 60 56 57 Z" fill="#ff7a7a" stroke="none"/></g>
-      <g class="m-open"><ellipse cx="63" cy="52" rx="8" ry="10" fill="#141414" stroke-width="3"/><ellipse cx="63" cy="57" rx="4.5" ry="3" fill="#ff7a7a" stroke="none"/></g>
-      <path class="m-sad" d="M50 58 Q63 45 76 58" stroke-width="4.5" fill="none"/>
-      <path class="m-wavy" d="M49 52 q3.5 -4 7 0 t7 0 t7 0 t7 0" stroke-width="4" fill="none"/>
+      <g class="m-smile"><path d="M54 21 Q63 32 73 20.5 Z" fill="#141414" stroke-width="2.8"/><path d="M56.5 21.6 L70.5 21.2 L69.5 24 L57.5 24.3 Z" fill="#fff" stroke="none"/></g>
+      <g class="m-open"><ellipse cx="63" cy="24" rx="5" ry="6" fill="#141414" stroke-width="2.5"/></g>
+      <path class="m-sad" d="M55 28 Q63 20 71 28" stroke-width="3.5" fill="none"/>
+      <path class="m-wavy" d="M53 24 q2.5 -3 5 0 t5 0 t5 0 t5 0" stroke-width="3" fill="none"/>
     </g>
     <!-- le point du « ? » : sa balle -->
-    <g class="ball" stroke="#141414"><circle cx="108" cy="134" r="11" fill="#ff3b3b" stroke-width="4.5"/><ellipse cx="104" cy="130" rx="3.5" ry="2.2" fill="#fff" opacity=".5" stroke="none"/></g>
+    <g class="ball" stroke="#141414"><circle cx="106" cy="134" r="10" fill="#ff3b3b" stroke-width="4.5"/><ellipse cx="102.5" cy="130.5" rx="3" ry="2" fill="#fff" opacity=".5" stroke="none"/></g>
   </svg>
 </div>
 <div id="update" class="update" hidden role="status"><span>Nouvelle version disponible</span><button id="updbtn" class="small primary" type="button">Mettre à jour</button></div>
@@ -605,11 +620,7 @@ function render(){
 function home(){return `
  <div class="topbar"><span></span>${soundBtn()}</div>
  <div class="hero">
-  <div class="fan" aria-hidden="true">
-   <div class="fc f1"><i>7</i><small>Personnage</small></div>
-   <div class="fc f3"><i>15</i><small>Chose</small></div>
-   <div class="fc f2"><i>20</i><small>Lieu</small></div>
-  </div>
+  <div class="mbig" aria-hidden="true"><span class="hbubble">Prêt à deviner ?</span>${mascotSVG()}</div>
   <h1 class="logo">Vingt<span>Indices</span></h1>
   <p class="tagline">Un lecteur tient le téléphone. Les autres choisissent un numéro et tentent de deviner le personnage, le lieu ou la chose. Plus on trouve tôt, plus on marque.</p>
   <p class="label">2 à 8 joueurs · ${deck().length} cartes</p>
@@ -823,10 +834,11 @@ function editor(){const d=S.draft;return `
  <button class="primary block big" data-savecard>Enregistrer la carte</button>`}
 
 /* ---------- mascotte « ? » ---------- */
+const mascotSVG=()=>{const s=document.querySelector("#mascot svg");return s?s.outerHTML:""};
 let mascotKey=null,mascotTimer=null;
 function mood(){const g=S.game;
   switch(S.view){
-    case "home":return ["wave","Prêt à deviner ?"];
+    case "home":return null; // sur l'accueil, c'est la grande mascotte au centre qui parle
     case "setup":return ["wave","Qui joue avec moi ?"];
     case "rules":return ["point","Tout est expliqué ici !"];
     case "cards":return ["think","Que de cartes…"];
@@ -849,7 +861,7 @@ function mood(){const g=S.game;
 function placeMascot(el,line){
   const W=innerWidth,H=innerHeight,cs=getComputedStyle(document.documentElement);
   const st=(parseFloat(cs.paddingTop)||0)+6,sb=(parseFloat(cs.paddingBottom)||0)+6;
-  const w=el.offsetWidth||68,h=w*1.25;
+  const w=el.offsetWidth||68,h=w*190/144;
   const lineOn=!line.hidden;
   const bw=lineOn?Math.min(line.offsetWidth||150,W-24):0,bh=lineOn?(line.offsetHeight||30):0;
   const ov=document.querySelector(".overlay .sheet");
@@ -860,7 +872,7 @@ function placeMascot(el,line){
   const rects=[...root.querySelectorAll(sel)].filter(e=>!e.closest(".mascot")).map(e=>{const r=e.getBoundingClientRect();r.k=heavy(e)?2:1;return r}).filter(r=>r.width&&r.height&&r.bottom>0&&r.top<H);
   if(ov)rects.push(...[...ov.querySelectorAll(".face")].map(e=>{const r=e.getBoundingClientRect();r.k=2;return r}));
   const inter=(a,b)=>Math.max(0,Math.min(a.r,b.right)-Math.max(a.l,b.left))*Math.max(0,Math.min(a.b,b.bottom)-Math.max(a.t,b.top));
-  const xs=[W-w-8,8],ys=[H-h-sb,H*.58-h/2,H*.36-h/2,st+44,st+4];
+  const xs=[W-w-8,8],ys=[H-h-sb,H*.58-h/2,H*.36-h/2,st+60];
   let best=null,k=0;
   ys.forEach(y=>xs.forEach(x=>["up","mid","down"].forEach(v=>{
     const right=x>W/2,boxes=[{l:x,t:y,r:x+w,b:y+h}],rank=k++;
