@@ -365,11 +365,85 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 .sw-desc{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:600;color:var(--ink-soft)}
 .sw-desc b{color:var(--ink);font-weight:800}
 
+/* Mascotte « ? » : surgit en bas à droite quand l'écran change, réagit, puis repart */
+.mascot{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));width:92px;z-index:50;pointer-events:none;transform:translateY(160%)}
+.mascot.show{animation:m-in .6s ease-out forwards}
+.mascot.leave{animation:m-out .35s ease-in forwards}
+.mascot svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(3px 4px 0 rgba(0,0,0,.45))}
+.mbubble{position:absolute;right:78%;bottom:86%;width:max-content;max-width:min(210px,58vw);background:#fff;color:#141414;border:3px solid #141414;border-radius:16px 16px 4px 16px;padding:8px 12px;font:400 1.02rem/1.15 "Bangers","Karla",sans-serif;letter-spacing:.04em;box-shadow:3px 3px 0 #141414;transition:opacity .15s,transform .15s}
+.mascot.leave .mbubble{opacity:0;transform:scale(.6)}
+.mascot .rig{transform-box:view-box;transform-origin:63px 148px}
+.mascot .arm-l{transform-box:view-box;transform-origin:42px 106px;transition:transform .3s}
+.mascot .arm-r{transform-box:view-box;transform-origin:84px 106px;transition:transform .3s}
+.mascot .brow-l{transform-box:view-box;transform-origin:47px 9px;transition:transform .3s}
+.mascot .brow-r{transform-box:view-box;transform-origin:76px 8px;transition:transform .3s}
+.mascot .brows,.mascot .pupils{transition:transform .3s}
+.mascot .ball{transform-box:fill-box;transform-origin:center bottom}
+.mascot.show .ball{animation:m-bounce .42s ease-in-out .5s 6 alternate}
+.mascot .m-open,.mascot .m-sad,.mascot .m-wavy{display:none}
+.mascot.wave .arm-r{animation:m-wave .5s ease-in-out .35s 3}
+.mascot.cheer .rig{animation:m-jump .6s ease-out .35s 3}
+.mascot.cheer .arm-l{transform:rotate(25deg)}.mascot.cheer .arm-r{transform:rotate(-25deg)}
+.mascot.think .rig{animation:m-tilt 1.4s ease-in-out .3s 2}
+.mascot.think .pupils{transform:translate(3px,-3px)}
+.mascot.think .m-smile{display:none}.mascot.think .m-wavy{display:inline}
+.mascot.think .arm-r{transform:rotate(-115deg)}
+.mascot.shock .rig{animation:m-shake .45s ease-in-out .35s 3}
+.mascot.shock .brows{transform:translateY(-5px)}
+.mascot.shock .m-smile{display:none}.mascot.shock .m-open{display:inline}
+.mascot.shock .arm-l{transform:rotate(35deg)}.mascot.shock .arm-r{transform:rotate(-35deg)}
+.mascot.sad .rig{animation:m-tilt 1.6s ease-in-out .3s 1}
+.mascot.sad .m-smile{display:none}.mascot.sad .m-sad{display:inline}
+.mascot.sad .pupils{transform:translateY(4px)}
+.mascot.sad .brow-l{transform:rotate(-16deg)}.mascot.sad .brow-r{transform:rotate(16deg)}
+.mascot.sad .arm-l{transform:rotate(-110deg)}.mascot.sad .arm-r{transform:rotate(110deg)}
+.mascot.point .arm-r{transform:rotate(-55deg)}
+@keyframes m-in{0%{transform:translateY(160%) rotate(-200deg) scale(.5)}60%{transform:translateY(-8%) rotate(12deg) scale(1.15,.9)}80%{transform:translateY(0) rotate(-4deg) scale(.95,1.06)}100%{transform:translateY(0) rotate(0) scale(1)}}
+@keyframes m-out{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-10%) scale(.9,1.12)}100%{transform:translateY(260%);visibility:hidden}}
+@keyframes m-wave{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(28deg)}}
+@keyframes m-jump{0%,100%{transform:translateY(0) scaleY(1)}15%{transform:translateY(2px) scaleY(.92)}45%{transform:translateY(-14px) scaleY(1.04)}70%{transform:translateY(0) scaleY(.96)}}
+@keyframes m-shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-4px) rotate(-4deg)}40%{transform:translateX(4px) rotate(4deg)}60%{transform:translateX(-3px) rotate(-3deg)}80%{transform:translateX(3px) rotate(2deg)}}
+@keyframes m-tilt{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(5deg)}}
+@keyframes m-bounce{from{transform:translateY(0) scale(1.08,.9)}to{transform:translateY(-16px) scale(1)}}
+@media (prefers-reduced-motion:reduce){.mascot,.mascot *{animation:none!important}.mascot{transform:none;opacity:0;transition:opacity .2s}.mascot.show{opacity:1}.mascot.leave{opacity:0}}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;transition:none!important}}
 </style>
 
 <div class="app" id="app"></div>
 <div id="toast" class="toast" hidden></div>
+<div class="mascot" id="mascot" aria-hidden="true">
+  <div class="mbubble" id="mascotLine"></div>
+  <svg viewBox="-10 -14 144 180">
+    <g class="rig" stroke="#141414" stroke-linecap="round" stroke-linejoin="round">
+      <!-- jambes et baskets -->
+      <path d="M56 128 L52 144 M70 128 L74 144" stroke-width="5" fill="none"/>
+      <path d="M38 148 Q38 139 51 140 Q61 141 62 148 Z" fill="#fff" stroke-width="4"/>
+      <path d="M66 148 Q67 141 77 140 Q90 139 90 148 Z" fill="#fff" stroke-width="4"/>
+      <path d="M43 144 L57 144 M71 144 L85 144" stroke="#1f8fff" stroke-width="3"/>
+      <!-- corps : un « ? » bien gras -->
+      <path d="M30 48 C30 10 96 8 96 46 C96 72 63 70 63 98 L63 120" stroke-width="56" fill="none"/>
+      <path d="M30 48 C30 10 96 8 96 46 C96 72 63 70 63 98 L63 120" stroke="#ff3b3b" stroke-width="46" fill="none"/>
+      <path d="M100 30 C108 44 106 62 96 72" stroke="#c81f1f" stroke-width="6" fill="none" opacity=".5"/>
+      <ellipse cx="20" cy="34" rx="6" ry="3.5" fill="#fff" opacity=".45" stroke="none" transform="rotate(-50 20 34)"/>
+      <!-- bras et gants -->
+      <g class="arm-l"><path d="M42 106 Q26 104 20 88" stroke-width="5" fill="none"/><circle cx="19" cy="84" r="8.5" fill="#fff" stroke-width="4"/></g>
+      <g class="arm-r"><path d="M84 106 Q100 104 106 88" stroke-width="5" fill="none"/><circle cx="107" cy="84" r="8.5" fill="#fff" stroke-width="4"/></g>
+      <!-- yeux et sourcils -->
+      <ellipse cx="49" cy="28" rx="11" ry="13" fill="#fff" stroke-width="4"/>
+      <ellipse cx="75" cy="27" rx="11" ry="13" fill="#fff" stroke-width="4"/>
+      <g class="pupils" stroke="none"><circle cx="52" cy="30" r="4.8" fill="#141414"/><circle cx="73" cy="29" r="4.8" fill="#141414"/><circle cx="53.5" cy="28.5" r="1.6" fill="#fff"/><circle cx="74.5" cy="27.5" r="1.6" fill="#fff"/></g>
+      <g class="brows"><path class="brow-l" d="M39 11 Q47 6 56 9" stroke-width="5" fill="none"/><path class="brow-r" d="M67 8 Q76 5 84 10" stroke-width="5" fill="none"/></g>
+      <!-- bouches -->
+      <g class="m-smile"><path d="M48 46 Q62 66 78 45 Z" fill="#141414" stroke-width="3.5"/><path d="M51 47 L75 46.5 L73 51 L53 51.5 Z" fill="#fff" stroke="none"/><path d="M56 57 Q63 53 70 56 Q63 60 56 57 Z" fill="#ff7a7a" stroke="none"/></g>
+      <g class="m-open"><ellipse cx="63" cy="52" rx="8" ry="10" fill="#141414" stroke-width="3"/><ellipse cx="63" cy="57" rx="4.5" ry="3" fill="#ff7a7a" stroke="none"/></g>
+      <path class="m-sad" d="M50 58 Q63 45 76 58" stroke-width="4.5" fill="none"/>
+      <path class="m-wavy" d="M49 52 q3.5 -4 7 0 t7 0 t7 0 t7 0" stroke-width="4" fill="none"/>
+    </g>
+    <!-- le point du « ? » : sa balle -->
+    <g class="ball" stroke="#141414"><circle cx="108" cy="134" r="11" fill="#ff3b3b" stroke-width="4.5"/><ellipse cx="104" cy="130" rx="3.5" ry="2.2" fill="#fff" opacity=".5" stroke="none"/></g>
+  </svg>
+</div>
 <div id="update" class="update" hidden role="status"><span>Nouvelle version disponible</span><button id="updbtn" class="small primary" type="button">Mettre à jour</button></div>
 
 <script>
@@ -377,19 +451,19 @@ const BUILTIN = [{"id":"b1","cat":"Personnage","theme":"Personnage","answer":"Ma
 
 const LS="vingtIndices.v1";
 function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
-function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style}))}catch(e){}}
+function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen}))}catch(e){}}
 const stored=load();
 /* Ancienne liste de joueurs par défaut, enregistrée telle quelle : on la remplace par la nouvelle. */
 if(Array.isArray(stored.players)&&stored.players.join("|")==="Léa|Hugo|Inès")delete stored.players;
-let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.style||"carton",off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
+let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.styleChosen?(stored.style||"bd"):"bd",styleChosen:!!stored.styleChosen,off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
 
 const THEMES=["Personnage","Lieu","Chose"];
 const CATC={Personnage:["var(--red)","var(--red-ink)"],Lieu:["var(--blue)","var(--blue-ink)"],Chose:["var(--yellow)","var(--yellow-ink)"]};
 const STYLES=[
+  {id:"bd",name:"BD",desc:"Bande dessinée pop, aplats et gros traits",bar:"#ffd94a",clue:"Je fais « Boum ! »."},
   {id:"carton",name:"Carton",desc:"Table kraft, gommettes et fiches tapées à la machine",bar:"#d8c29c",clue:"Je suis né en Corse."},
-  {id:"journal",name:"Journal",desc:"Gazette des années 40, papier gris, touches de couleur",bar:"#d9d9d6",clue:"On m'achète au kiosque."},
-  {id:"bd",name:"BD",desc:"Bande dessinée pop, aplats et gros traits",bar:"#ffd94a",clue:"Je fais « Boum ! »."}];
-function applyStyle(){if(!STYLES.some(t=>t.id===S.style))S.style="carton";const st=STYLES.find(t=>t.id===S.style);
+  {id:"journal",name:"Journal",desc:"Gazette des années 40, papier gris, touches de couleur",bar:"#d9d9d6",clue:"On m'achète au kiosque."}];
+function applyStyle(){if(!STYLES.some(t=>t.id===S.style))S.style="bd";const st=STYLES.find(t=>t.id===S.style);
   document.documentElement.dataset.style=st.id;const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=st.bar}
 const catStyle=c=>{const k=CATC[c&&c.cat]||CATC.Chose;return `--cat:${k[0]};--cat-ink:${k[1]}`};
 const toCat=c=>/^Personn/.test(c)?"Personnage":c==="Lieu"?"Lieu":"Chose";
@@ -719,6 +793,38 @@ function editor(){const d=S.draft;return `
  </div>
  <button class="primary block big" data-savecard>Enregistrer la carte</button>`}
 
+/* ---------- mascotte « ? » ---------- */
+let mascotKey=null,mascotTimer=null;
+function mood(){const g=S.game;
+  switch(S.view){
+    case "home":return ["wave","Prêt à deviner ?"];
+    case "setup":return ["wave","Qui joue avec moi ?"];
+    case "rules":return ["point","Tout est expliqué ici !"];
+    case "cards":return ["think","Que de cartes…"];
+    case "editor":return ["point","20 indices, pas un de moins !"];
+    case "styles":return ["cheer","Choisis mon look !"];
+    case "browse":return ["think","Saurais-tu deviner ?"];
+    case "final":return ["cheer","Quelle partie !"];
+    case "round":{
+      if(!g)return null;
+      const r=g.result,n=g.used.length,who=g.players[g.guesser];
+      if(r)return r.found?["cheer",`Bravo ${g.players[r.who]} !`]:["sad","Personne ? Dommage !"];
+      if(S.clueOpen)return n>=15?["shock",`Déjà ${n} indices ?!`]:["think","Alors, ça te dit quelque chose ?"];
+      if(!n)return ["wave",`À toi, ${who} : choisis un numéro !`];
+      return ["sad",`Raté ! À toi, ${who} !`];
+    }
+  }
+  return null}
+function react(){const el=document.getElementById("mascot"),line=document.getElementById("mascotLine");if(!el)return;
+  const g=S.game;
+  const key=S.view==="round"&&g?["round",g.round,g.skip||0,g.used.length,S.clueOpen||0,g.result?1:0].join("|"):S.view;
+  if(key===mascotKey)return;mascotKey=key;
+  const m=mood();clearTimeout(mascotTimer);
+  if(!m){el.className="mascot";return}
+  line.textContent=m[1];line.hidden=!m[1];
+  el.className="mascot "+m[0];void el.offsetWidth;el.classList.add("show");
+  mascotTimer=setTimeout(()=>el.classList.replace("show","leave"),2800)}
+
 /* ---------- animations après rendu ---------- */
 let PREV={};
 function fxState(){const g=S.game,b=S.browse;
@@ -737,7 +843,7 @@ function typeIt(){const el=document.getElementById("typed");if(!el||REDUCE)retur
   typingTimer=setTimeout(step,560)}
 function countUp(animate){document.querySelectorAll("[data-to]").forEach(el=>{const a=+el.dataset.from,b=+el.dataset.to;if(!animate||REDUCE||a===b){el.textContent=b;return}
   const t0=performance.now()+250,dur=750;el.textContent=a;(function f(now){const p=Math.max(0,Math.min(1,(now-t0)/dur));el.textContent=Math.round(a+(b-a)*(1-Math.pow(1-p,3)));if(p<1&&el.isConnected)requestAnimationFrame(f)})(performance.now())})}
-function after(){const cur=fxState();
+function after(){const cur=fxState();react();
   if(S.noFx){S.noFx=false;PREV=cur;return}
   const app=document.getElementById("app");
   if(cur.view!==PREV.view){app.classList.remove("enter");void app.offsetWidth;app.classList.add("enter")}else app.classList.remove("enter");
@@ -761,7 +867,7 @@ function bind(){
     if(e.target.closest("[data-fiche]")){finishTyping();return}
     const b=e.target.closest("button,input[type=checkbox]");if(!b)return;const d=b.dataset;
     if(d.go){syncPlayers();S.view=d.go;S.confirmDel=null;render();window.scrollTo(0,0)}
-    else if(d.pickstyle){S.style=d.pickstyle;save();S.noFx=true;render();SFX.soft()}
+    else if(d.pickstyle){S.style=d.pickstyle;S.styleChosen=true;save();S.noFx=true;render();SFX.soft()}
     else if("sound" in d){S.sound=!S.sound;save();render();if(S.sound)SFX.soft()}
     else if("addp" in d){syncPlayers();S.players.push("");save();render();const l=document.querySelectorAll("[data-p]");l[l.length-1].focus()}
     else if(d.delp){syncPlayers();S.players.splice(+d.delp,1);save();render()}

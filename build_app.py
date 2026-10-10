@@ -18,7 +18,7 @@ head = f"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 {title.strip()}
-<meta name="theme-color" content="#d8c29c">
+<meta name="theme-color" content="#ffd94a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="20 Indices">
@@ -75,8 +75,8 @@ manifest = {
     "scope": "./",
     "display": "standalone",
     "orientation": "portrait",
-    "background_color": "#d8c29c",
-    "theme_color": "#d8c29c",
+    "background_color": "#ffd94a",
+    "theme_color": "#ffd94a",
     "icons": [
         {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
         {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
