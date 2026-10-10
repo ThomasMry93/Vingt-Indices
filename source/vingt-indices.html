@@ -365,6 +365,21 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 .sw-desc{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:600;color:var(--ink-soft)}
 .sw-desc b{color:var(--ink);font-weight:800}
 
+/* Accueil : la mascotte en grand au centre, qui se dandine, salue et fait rebondir sa balle */
+.mbig{position:relative;left:-8px;width:170px;margin:4px auto 2px}
+.mbig svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.4))}
+.mbig .rig{transform-box:view-box;transform-origin:63px 148px;animation:m-bob 2.6s ease-in-out infinite}
+.mbig .arm-r{transform-box:view-box;transform-origin:84px 106px;animation:m-hello 3.2s ease-in-out infinite}
+.mbig .m-open,.mbig .m-sad,.mbig .m-wavy{display:none}
+.mbig .ball{transform-box:fill-box;transform-origin:center bottom;animation:m-bounce .45s ease-in-out infinite alternate}
+.mbig .pupils{animation:m-look 5s ease-in-out infinite}
+.hbubble{position:absolute;left:-68px;top:-6px;background:#fff;color:#141414;border:3px solid #141414;border-radius:16px 16px 4px 16px;padding:7px 12px;font:400 1.05rem/1.1 "Bangers","Karla",sans-serif;letter-spacing:.04em;box-shadow:3px 3px 0 #141414;white-space:nowrap;transform:rotate(-6deg);animation:m-pop .5s cubic-bezier(.3,1.6,.5,1) .4s both}
+.enter .mbig{animation:m-in .7s ease-out both}
+@keyframes m-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes m-hello{0%,55%,100%{transform:rotate(0)}65%,85%{transform:rotate(30deg)}75%,95%{transform:rotate(-8deg)}}
+@keyframes m-look{0%,40%,100%{transform:translate(0,0)}50%,70%{transform:translate(-3px,1px)}80%,90%{transform:translate(3px,-1px)}}
+@keyframes m-pop{from{transform:rotate(-6deg) scale(0)}}
+
 /* Mascotte « ? » : surgit quand l'écran change, à l'endroit le plus dégagé (placement calculé en JS), réagit, puis repart */
 .mascot{position:fixed;left:0;top:0;width:68px;z-index:50;pointer-events:none;transform:scale(0);visibility:hidden}
 .mascot.show,.mascot.leave{visibility:visible}
@@ -581,11 +596,7 @@ function render(){
 function home(){return `
  <div class="topbar"><span></span>${soundBtn()}</div>
  <div class="hero">
-  <div class="fan" aria-hidden="true">
-   <div class="fc f1"><i>7</i><small>Personnage</small></div>
-   <div class="fc f3"><i>15</i><small>Chose</small></div>
-   <div class="fc f2"><i>20</i><small>Lieu</small></div>
-  </div>
+  <div class="mbig" aria-hidden="true"><span class="hbubble">Prêt à deviner ?</span>${mascotSVG()}</div>
   <h1 class="logo">Vingt<span>Indices</span></h1>
   <p class="tagline">Un lecteur tient le téléphone. Les autres choisissent un numéro et tentent de deviner le personnage, le lieu ou la chose. Plus on trouve tôt, plus on marque.</p>
   <p class="label">2 à 8 joueurs · ${deck().length} cartes</p>
@@ -799,10 +810,11 @@ function editor(){const d=S.draft;return `
  <button class="primary block big" data-savecard>Enregistrer la carte</button>`}
 
 /* ---------- mascotte « ? » ---------- */
+const mascotSVG=()=>{const s=document.querySelector("#mascot svg");return s?s.outerHTML:""};
 let mascotKey=null,mascotTimer=null;
 function mood(){const g=S.game;
   switch(S.view){
-    case "home":return ["wave","Prêt à deviner ?"];
+    case "home":return null; // sur l'accueil, c'est la grande mascotte au centre qui parle
     case "setup":return ["wave","Qui joue avec moi ?"];
     case "rules":return ["point","Tout est expliqué ici !"];
     case "cards":return ["think","Que de cartes…"];
