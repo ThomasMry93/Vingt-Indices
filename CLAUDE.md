@@ -39,7 +39,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 
 - 3 catégories : **Personnage, Lieu, Chose**. 550 cartes de base (152 / 194 / 204).
 - Format : `{"id","cat","theme","answer","clues":[20 chaînes]}` ; `theme` = `cat`.
-- Style des indices : à la première personne (« Je suis né à… », « On me… »), courts (< 90 caractères), ordre de difficulté mélangé, jamais le mot de la réponse, faits vérifiables uniquement. Pour les personnes vivantes : carrière publique seulement, rien de privé ni de polémique.
+- Style des indices : à la première personne (« Je suis né à… », « On me… »), y compris pour les lieux et les choses avec le possessif (« Certaines de mes falaises… », « Chez moi, on… », « l'un des miens ») : jamais d'indice impersonnel du type « Les falaises d'Étretat ont… » ou « On y… », courts (< 90 caractères), ordre de difficulté mélangé, jamais le mot de la réponse, faits vérifiables uniquement. Pour les personnes vivantes : carrière publique seulement, rien de privé ni de polémique.
 - Les ids restent stables (les modifications/suppressions locales des joueurs s'y réfèrent).
 
 ## Fonctions de l'appli
