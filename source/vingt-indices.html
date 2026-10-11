@@ -387,6 +387,7 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 .ptag.inband{margin-right:8px;box-shadow:0 0 0 1.5px rgba(255,255,255,.8);vertical-align:1px}
 .ptag.inlist{margin-left:6px;vertical-align:1px}
 .linkrow .ptag.inlist{display:inline-flex}
+.chipt .cnt{font-size:.78em;opacity:.7;font-weight:800;margin-left:2px}
 
 /* Mascotte « ? » : surgit quand l'écran change, à l'endroit le plus dégagé (placement calculé en JS), réagit, puis repart */
 .mascot{position:fixed;left:0;top:0;width:68px;z-index:50;pointer-events:none;transform:scale(0);visibility:hidden}
@@ -763,12 +764,13 @@ function rules(){return `
 
 const norm=t=>String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/^(le |la |les |l'|l’)/,"");
 function searchResults(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
- const all=[...base(),...S.mine].filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q)));
+ const lp=S.lplay||"",pf={none:c=>!S.played[c.id],found:c=>S.played[c.id]===1,missed:c=>S.played[c.id]===2}[lp];
+ const all=[...base(),...S.mine].filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c)));
  const lim=S.lim||40;
  if(!all.length)return `<p class="muted">Aucune carte ne correspond${q?` à « ${esc(S.q)} »`:""}.</p>`;
  const isMine=c=>S.mine.some(m=>m.id===c.id);
  return `<p class="label">${all.length} carte${all.length>1?"s":""}</p>`+all.slice(0,lim).map(c=>`<div class="card-item">
-   <button class="linkrow" data-open="${c.id}"><b>${esc(c.answer)}</b><br><span class="tag"><i class="dot" style="background:${(CATC[c.cat]||CATC.Chose)[0]}"></i>${esc(c.cat)}${isMine(c)?" · ma carte":c.edited?" · modifiée":""}</span>${playedTag(c,"inlist")}</button>
+   <button class="linkrow" data-open="${c.id}"><b>${esc(c.answer)}</b><br><span class="tag"><i class="dot" style="background:${(CATC[c.cat]||CATC.Chose)[0]}"></i>${esc(c.cat)}${isMine(c)?" · ma carte":c.edited?" · modifiée":""}</span>${S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} inlist">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:""}</button>
    <div class="row" style="flex-wrap:nowrap"><button class="small" data-edit="${c.id}">Modifier</button>
    ${S.confirmDel===c.id?`<button class="small ko" data-del="${c.id}">Confirmer</button>`:`<button class="small" data-askdel="${c.id}">Suppr.</button>`}</div></div>`).join("")
    +(all.length>lim?`<button class="small block" data-more style="margin-top:10px">Afficher ${Math.min(40,all.length-lim)} de plus</button>`:"")}
@@ -799,7 +801,10 @@ function cards(){return `
  <div class="panel stack">
   <p class="label">Liste des cartes</p>
   <input id="search" type="search" autocomplete="off" placeholder="Rechercher : Mozart, gare, crêpe…" value="${esc(S.q||"")}" aria-label="Rechercher une carte">
+  <p class="label" style="margin-bottom:-4px">Catégorie</p>
   <div class="row">${["",...THEMES].map(t=>`<button class="small chipt ${(S.lcat||"")===t?"on":""}" data-lcat="${t}">${t||"Toutes"}</button>`).join("")}</div>
+  ${(()=>{const L=[...base(),...S.mine],n={"":L.length,none:L.filter(c=>!S.played[c.id]).length,found:L.filter(c=>S.played[c.id]===1).length,missed:L.filter(c=>S.played[c.id]===2).length};
+   return `<p class="label" style="margin-bottom:-4px">Déjà jouée en partie</p><div class="row">${[["","Toutes"],["none","Jamais jouées"],["found","✓ Trouvées"],["missed","✗ Ratées"]].map(([k,l])=>`<button class="small chipt ${(S.lplay||"")===k?"on":""}" data-lplay="${k}">${l} <span class="cnt">${n[k]}</span></button>`).join("")}</div>`})()}
   <div id="results">${searchResults()}</div>
  </div>
  ${S.removed.length?`<div class="panel stack"><p class="label">Cartes supprimées (${S.removed.length})</p>
@@ -985,6 +990,7 @@ function bind(){
     else if(d.edit){const c=[...S.mine,...base()].find(x=>x.id===d.edit);S.draft={id:c.id,cat:c.cat,answer:c.answer,clues:[...c.clues]};S.view="editor";render();window.scrollTo(0,0)}
     else if(d.resetedit){delete S.edits[d.resetedit];save();S.view="cards";render();toast("Version d'origine rétablie")}
     else if(d.lcat!==undefined){S.lcat=d.lcat;S.lim=40;render()}
+    else if(d.lplay!==undefined){S.lplay=d.lplay;S.lim=40;render()}
     else if("more" in d){S.lim=(S.lim||40)+40;refreshList()}
     else if(d.askdel){S.confirmDel=d.askdel;refreshList()}
     else if(d.del){removeCard(d.del);S.confirmDel=null;render();toast("Carte supprimée")}
