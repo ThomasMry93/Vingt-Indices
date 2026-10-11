@@ -25,15 +25,6 @@
 [hidden]{display:none!important}
 html,body{min-height:100%}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-/* Paysage sur téléphone : le jeu se joue en portrait (iOS ne permet pas de bloquer l'orientation) */
-#rotate{display:none;position:fixed;inset:0;z-index:200;flex-direction:row;align-items:center;justify-content:center;gap:24px;padding:16px;background-color:var(--table);background-image:var(--fibers),var(--grain);color:var(--ink);text-align:left}
-#rotate svg{width:84px;height:auto;overflow:visible;animation:m-turn 1.8s ease-in-out infinite}
-#rotate p{font:400 1.6rem/1.1 var(--display);max-width:16ch}
-#rotate small{display:block;margin-top:6px;font:600 .95rem var(--body);color:var(--ink-soft)}
-@keyframes m-turn{0%,30%{transform:rotate(0)}60%,90%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
-#rotate .m-open,#rotate .m-sad,#rotate .m-wavy{display:none}
-html[data-style=bd] #rotate{background-image:var(--grain);background-size:12px 12px}
-@media (orientation:landscape) and (max-height:520px){#rotate{display:flex}}
 /* Le décor de table est peint sur la page elle-même (html). Sur iPhone, l'appli installée (iOS 26)
    arrête sa zone d'affichage avant le bas de l'écran et ne peint au-delà que la couleur unie :
    on étire donc la page sur toute la hauteur de l'écran (100lvh). */
@@ -449,7 +440,6 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 
 <div class="app" id="app"></div>
 <div id="toast" class="toast" hidden></div>
-<div id="rotate" role="alert"><span id="rotm"></span><p>Tourne ton téléphone !<small>Le jeu se joue en mode portrait.</small></p></div>
 <div class="mascot" id="mascot" aria-hidden="true">
   <div class="mbubble" id="mascotLine"></div>
   <svg viewBox="-10 -24 144 190">
@@ -1023,7 +1013,7 @@ function bind(){
 window.VI_showUpdate=function(apply){const u=document.getElementById("update"),btn=document.getElementById("updbtn");if(!u)return;u.hidden=false;
   btn.onclick=()=>{btn.disabled=true;btn.textContent="Mise à jour…";try{apply()}catch(e){location.reload()}}};
 
-function start(data){const rm=document.getElementById("rotm");if(rm&&!rm.innerHTML)rm.innerHTML=mascotSVG();if(data&&data.S){S=data.S;S.clueOpen=null;S.busy=false;S.noFx=true}render()}
+function start(data){if(data&&data.S){S=data.S;S.clueOpen=null;S.busy=false;S.noFx=true}render()}
 window.claude?.hot?.snapshot?.(()=>({S}));
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 </script>
