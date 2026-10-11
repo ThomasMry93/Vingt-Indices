@@ -51,6 +51,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 - Fiche d'indice ouverte : ligne de réponse masquée par défaut avec le bouton Afficher/Masquer (même réglage que sur la carte).
 - Fin de carte (trouvée ou ratée) : bouton **Afficher tous les indices** (les 20, ceux non lus en retrait), avec un second bouton « Carte suivante » sous la liste.
 - Pas de zoom (viewport `user-scalable=no` + blocage du pincement en JS, `touch-action:manipulation`) ; portrait imposé (manifeste) et, en paysage sur téléphone, écran « Tourne ton téléphone ! » avec la mascotte (`#rotate`), car iOS ne permet pas de bloquer l'orientation.
+- **Cartes déjà jouées** (comme les thèmes du Risque-Tout) : au passage à la carte suivante, la carte est mémorisée (`played[id]` : 1 = trouvée, 2 = ratée ; une carte passée ne compte pas). Badge « ✓ déjà trouvée » / « ✗ déjà ratée » sur la carte en jeu, en lecture libre et dans la liste. Le tirage d'une partie met les cartes jamais jouées d'abord. Barre « Cartes déjà jouées » (écrans Nouvelle partie et Cartes) : masquer/afficher l'indicateur, réinitialiser (avec confirmation).
 - Données des joueurs (cartes perso, modifications, suppressions, réglages) : `localStorage`, propre à chaque téléphone.
 
 ## Intégrer un export de l'utilisateur
