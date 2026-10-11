@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Vingt Indices</title>
 <meta name="theme-color" content="#ffd94a">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -48,6 +48,7 @@ img{max-width:100%}
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{min-height:100%}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* Le décor de table est peint sur la page elle-même (html). Sur iPhone, l'appli installée (iOS 26)
    arrête sa zone d'affichage avant le bas de l'écran et ne peint au-delà que la couleur unie :
    on étire donc la page sur toute la hauteur de l'écran (100lvh). */
@@ -404,6 +405,14 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 @keyframes m-look{0%,40%,100%{transform:translate(0,0)}50%,70%{transform:translate(-3px,1px)}80%,90%{transform:translate(3px,-1px)}}
 @keyframes m-pop{from{transform:rotate(-6deg) scale(0)}}
 
+/* Indicateur « déjà jouée » */
+.ptag{display:inline-flex;align-items:center;gap:3px;font:800 .66rem/1 var(--body);letter-spacing:.02em;text-transform:none;padding:.32em .6em;border-radius:999px;background:var(--ok);color:#fff;white-space:nowrap}
+.ptag.ko{background:var(--ink-soft);color:var(--paper)}
+.ptag.inband{margin-right:8px;box-shadow:0 0 0 1.5px rgba(255,255,255,.8);vertical-align:1px}
+.ptag.inlist{margin-left:6px;vertical-align:1px}
+.linkrow .ptag.inlist{display:inline-flex}
+.chipt .cnt{font-size:.78em;opacity:.7;font-weight:800;margin-left:2px}
+
 /* Mascotte « ? » : surgit quand l'écran change, à l'endroit le plus dégagé (placement calculé en JS), réagit, puis repart */
 .mascot{position:fixed;left:0;top:0;width:68px;z-index:50;pointer-events:none;transform:scale(0);visibility:hidden}
 .mascot.show,.mascot.leave{visibility:visible}
@@ -495,11 +504,11 @@ const BUILTIN = [{"id":"b1","cat":"Personnage","theme":"Personnage","answer":"Ma
 
 const LS="vingtIndices.v1";
 function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
-function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen}))}catch(e){}}
+function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen,played:S.played,playedShow:S.playedShow}))}catch(e){}}
 const stored=load();
 /* Ancienne liste de joueurs par défaut, enregistrée telle quelle : on la remplace par la nouvelle. */
 if(Array.isArray(stored.players)&&stored.players.join("|")==="Léa|Hugo|Inès")delete stored.players;
-let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.styleChosen?(stored.style||"bd"):"bd",styleChosen:!!stored.styleChosen,off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
+let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.styleChosen?(stored.style||"bd"):"bd",styleChosen:!!stored.styleChosen,played:stored.played||{},playedShow:stored.playedShow!==false,off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
 
 const THEMES=["Personnage","Lieu","Chose"];
 const CATC={Personnage:["var(--red)","var(--red-ink)"],Lieu:["var(--blue)","var(--blue-ink)"],Chose:["var(--yellow)","var(--yellow-ink)"]};
@@ -543,6 +552,9 @@ const SFX=(()=>{let ctx=null,noise=null;
   };
   return new Proxy({},{get:(_,k)=>()=>{if(!S.sound)return;try{P[k]&&P[k]()}catch(e){}}});
 })();
+/* Pas de zoom au pincement (iOS ignore user-scalable=no) ; le double-tap est neutralisé par touch-action:manipulation */
+["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+document.addEventListener("touchmove",e=>{if(e.touches.length>1||(e.scale&&e.scale!==1))e.preventDefault()},{passive:false});
 document.addEventListener("pointerdown",()=>SFX.unlock(),{passive:true});
 const ICON_ON='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9.5v5h3.6L12 18V6L7.6 9.5H4z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICON_OFF='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9.5v5h3.6L12 18V6L7.6 9.5H4z" fill="currentColor"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -574,10 +586,18 @@ function adjustSheet(){const g=S.game;return `<div class="overlay"><div class="s
    <button class="small" data-adj="${i}:1">+1</button><button class="small" data-adj="${i}:5">+5</button></div>`).join("")}</div>
   <div class="row">${undoBtn("small")}<button class="primary" style="flex:1" data-adjdone>Terminé</button></div>
  </div></div>`}
+/* Cartes déjà jouées : 1 = trouvée, 2 = ratée (passées sans points : non comptées) */
+const playedTag=(c,cls)=>S.playedShow&&S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} ${cls||""}">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:"";
+function playedBar(){const d=deck(),n=d.filter(c=>S.played[c.id]).length,t=Object.keys(S.played).length;if(!t)return "";
+ return `<div class="panel stack played-bar"><p class="label">Cartes déjà jouées</p>
+  <p class="muted"><b>${n}</b> carte${n>1?"s":""} sur ${d.length} déjà jouée${n>1?"s":""} dans ce paquet. Le tirage pioche d'abord les cartes jamais jouées.</p>
+  ${S.confirmPlayed?`<div class="row"><button class="small" style="flex:1" data-playedno>Annuler</button><button class="small ko" style="flex:1" data-playedreset>Tout oublier</button></div>`
+   :`<div class="row" style="justify-content:space-between"><button class="link" data-playedshow>${S.playedShow?"Masquer l'indicateur":"Afficher l'indicateur"}</button><button class="link" data-playedask>Réinitialiser</button></div>`}
+ </div>`}
 function startGame(){
   const players=S.players.map(s=>s.trim()).filter(Boolean);
   if(players.length<2){toast("Il faut au moins 2 joueurs");return}
-  const cards=shuffle(deck());
+  const all=deck(),cards=[...shuffle(all.filter(c=>!S.played[c.id])),...shuffle(all.filter(c=>S.played[c.id]))];
   const target=Math.max(5,Math.min(999,Math.round(+S.target)||50));S.target=target;
   if(cards.length<1){toast("Aucune carte disponible");return}
   S.game={players,scores:players.map(()=>0),round:0,target,cards,reader:0,guesser:1%players.length,used:[],showAnswer:false,result:null,tokens:players.map(()=>!!S.useTokens)};
@@ -605,7 +625,7 @@ function judge(found){
   render();
 }
 function nextRound(){
-  snap();const g=S.game;g.round++;
+  snap();const g=S.game;if(g.result){S.played[card().id]=g.result.found?1:2;save()}g.round++;
   if(Math.max(...g.scores)>=g.target){S.view="final";render();window.scrollTo(0,0);return}
   g.reader=g.round%g.players.length;g.guesser=(g.reader+1)%g.players.length;g.used=[];g.result=null;g.showAnswer=false;g.showAll=false;render();
 }
@@ -640,6 +660,7 @@ function setup(){return `
   <p class="label">Catégories</p>
   <div class="row">${THEMES.map(t=>`<button class="small chipt ${S.off.includes(t)?"":"on"}" data-theme="${esc(t)}" aria-pressed="${!S.off.includes(t)}">${esc(t)}</button>`).join("")}</div>
  </div>`:""}
+ ${playedBar()}
  <div class="panel stack">
   <p class="label">Points à atteindre</p>
   <p class="muted">La partie s'arrête à la fin de la carte où un joueur atteint ce score. ${deck().length} cartes dans le paquet.</p>
@@ -659,7 +680,7 @@ function round(){
   let top;
   if(g.result){const r=g.result,d={};if(r.found){d[r.who]=r.pts}d[g.reader]=(d[g.reader]||0)+r.readerPts;
     top=`<section class="gcard res">
-     <header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">Carte ${g.round+1}</span></header>
+     <header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">${playedTag(c,"inband")}Carte ${g.round+1}</span></header>
      <div class="gbody">
       <div class="stamp ${r.found?"ok":"ko"}">${r.found?"Trouvé":"Raté"}</div>
       <p class="label">La réponse</p>
@@ -670,7 +691,7 @@ function round(){
      ${n<20?`<button class="block" data-showall aria-pressed="${!!g.showAll}">${g.showAll?"Masquer les indices non lus":"Afficher tous les indices"}</button>`:""}
      <button class="primary block big" data-nextround>${Math.max(...g.scores)>=g.target?"Voir le classement":"Carte suivante"}</button>`}
   else top=`<section class="gcard">
-     <header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">Carte ${g.round+1}</span></header>
+     <header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">${playedTag(c,"inband")}Carte ${g.round+1}</span></header>
      <div class="gbody">
       <p class="label">Lecteur · ${esc(g.players[g.reader])}</p>
       <p class="turnline">Au tour de <strong>${esc(g.players[g.guesser])}</strong></p>
@@ -730,7 +751,7 @@ function browse(){const b=S.browse;
  if(!b.cards.length)return top+`<div class="panel"><p class="muted">Aucune carte dans les catégories choisies. Activez au moins une catégorie.</p></div>`;
  const c=b.cards[b.i];
  const seg=`<div class="seg" role="group" aria-label="Affichage"><button class="${b.mode==="hide"?"on":""}" data-bmode="hide" aria-pressed="${b.mode==="hide"}">Indices cachés</button><button class="${b.mode==="all"?"on":""}" data-bmode="all" aria-pressed="${b.mode==="all"}">Tous les indices</button></div>`;
- const head=`<section class="gcard"><header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">${b.cards.length>1?`Carte ${b.i+1} / ${b.cards.length}`:"Lecture libre"}</span></header>
+ const head=`<section class="gcard"><header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">${playedTag(c,"inband")}${b.cards.length>1?`Carte ${b.i+1} / ${b.cards.length}`:"Lecture libre"}</span></header>
    <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}</div></section>`;
  let body;
  if(b.mode==="all"){body=`<ol class="cluelist">${c.clues.map((t,i)=>`<li><span>${i+1}</span><p>${esc(t)}</p></li>`).join("")}</ol>`}
@@ -767,12 +788,13 @@ function rules(){return `
 
 const norm=t=>String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/^(le |la |les |l'|l’)/,"");
 function searchResults(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
- const all=[...base(),...S.mine].filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q)));
+ const lp=S.lplay||"",pf={none:c=>!S.played[c.id],found:c=>S.played[c.id]===1,missed:c=>S.played[c.id]===2}[lp];
+ const all=[...base(),...S.mine].filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c)));
  const lim=S.lim||40;
  if(!all.length)return `<p class="muted">Aucune carte ne correspond${q?` à « ${esc(S.q)} »`:""}.</p>`;
  const isMine=c=>S.mine.some(m=>m.id===c.id);
  return `<p class="label">${all.length} carte${all.length>1?"s":""}</p>`+all.slice(0,lim).map(c=>`<div class="card-item">
-   <button class="linkrow" data-open="${c.id}"><b>${esc(c.answer)}</b><br><span class="tag"><i class="dot" style="background:${(CATC[c.cat]||CATC.Chose)[0]}"></i>${esc(c.cat)}${isMine(c)?" · ma carte":c.edited?" · modifiée":""}</span></button>
+   <button class="linkrow" data-open="${c.id}"><b>${esc(c.answer)}</b><br><span class="tag"><i class="dot" style="background:${(CATC[c.cat]||CATC.Chose)[0]}"></i>${esc(c.cat)}${isMine(c)?" · ma carte":c.edited?" · modifiée":""}</span>${S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} inlist">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:""}</button>
    <div class="row" style="flex-wrap:nowrap"><button class="small" data-edit="${c.id}">Modifier</button>
    ${S.confirmDel===c.id?`<button class="small ko" data-del="${c.id}">Confirmer</button>`:`<button class="small" data-askdel="${c.id}">Suppr.</button>`}</div></div>`).join("")
    +(all.length>lim?`<button class="small block" data-more style="margin-top:10px">Afficher ${Math.min(40,all.length-lim)} de plus</button>`:"")}
@@ -798,11 +820,15 @@ function refreshList(){const r=document.getElementById("results");if(r)r.innerHT
 function cards(){return `
  <div class="topbar"><button class="link" data-go="home">← Accueil</button><button class="primary small" data-new>+ Nouvelle carte</button></div>
  <h2>Les cartes</h2>
+ ${playedBar()}
  <label class="row panel" style="justify-content:space-between;flex-wrap:nowrap"><span><b>Cartes de base</b><br><span class="muted">${base().length} cartes · ${S.mine.length} carte${S.mine.length>1?"s":""} perso</span></span><input type="checkbox" id="usebuiltin" ${S.useBuiltin?"checked":""} style="transform:scale(1.4)"></label>
  <div class="panel stack">
   <p class="label">Liste des cartes</p>
   <input id="search" type="search" autocomplete="off" placeholder="Rechercher : Mozart, gare, crêpe…" value="${esc(S.q||"")}" aria-label="Rechercher une carte">
+  <p class="label" style="margin-bottom:-4px">Catégorie</p>
   <div class="row">${["",...THEMES].map(t=>`<button class="small chipt ${(S.lcat||"")===t?"on":""}" data-lcat="${t}">${t||"Toutes"}</button>`).join("")}</div>
+  ${(()=>{const L=[...base(),...S.mine],n={"":L.length,none:L.filter(c=>!S.played[c.id]).length,found:L.filter(c=>S.played[c.id]===1).length,missed:L.filter(c=>S.played[c.id]===2).length};
+   return `<p class="label" style="margin-bottom:-4px">Déjà jouée en partie</p><div class="row">${[["","Toutes"],["none","Jamais jouées"],["found","✓ Trouvées"],["missed","✗ Ratées"]].map(([k,l])=>`<button class="small chipt ${(S.lplay||"")===k?"on":""}" data-lplay="${k}">${l} <span class="cnt">${n[k]}</span></button>`).join("")}</div>`})()}
   <div id="results">${searchResults()}</div>
  </div>
  ${S.removed.length?`<div class="panel stack"><p class="label">Cartes supprimées (${S.removed.length})</p>
@@ -976,6 +1002,10 @@ function bind(){
     else if("skip" in d){S.confirmSkip=true;render()}
     else if("skipno" in d){S.confirmSkip=false;render()}
     else if("skipyes" in d){skipCard()}
+    else if("playedshow" in d){syncPlayers();S.playedShow=!S.playedShow;save();render()}
+    else if("playedask" in d){syncPlayers();S.confirmPlayed=true;render()}
+    else if("playedno" in d){S.confirmPlayed=false;render()}
+    else if("playedreset" in d){S.played={};S.confirmPlayed=false;save();render();toast("Cartes jouées oubliées")}
     else if("showall" in d){S.game.showAll=!S.game.showAll;S.noFx=true;render();if(S.game.showAll){const l=document.querySelector(".cluelist");if(l)l.scrollIntoView({behavior:REDUCE?"auto":"smooth",block:"start"})}}
     else if("reveal" in d){S.game.showAnswer=!S.game.showAnswer;render()}
     else if("nextround" in d){nextRound();window.scrollTo(0,0)}
@@ -984,6 +1014,7 @@ function bind(){
     else if(d.edit){const c=[...S.mine,...base()].find(x=>x.id===d.edit);S.draft={id:c.id,cat:c.cat,answer:c.answer,clues:[...c.clues]};S.view="editor";render();window.scrollTo(0,0)}
     else if(d.resetedit){delete S.edits[d.resetedit];save();S.view="cards";render();toast("Version d'origine rétablie")}
     else if(d.lcat!==undefined){S.lcat=d.lcat;S.lim=40;render()}
+    else if(d.lplay!==undefined){S.lplay=d.lplay;S.lim=40;render()}
     else if("more" in d){S.lim=(S.lim||40)+40;refreshList()}
     else if(d.askdel){S.confirmDel=d.askdel;refreshList()}
     else if(d.del){removeCard(d.del);S.confirmDel=null;render();toast("Carte supprimée")}
