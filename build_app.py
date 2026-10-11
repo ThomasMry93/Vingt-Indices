@@ -16,7 +16,7 @@ head = f"""<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 {title.strip()}
 <meta name="theme-color" content="#ffd94a">
 <meta name="apple-mobile-web-app-capable" content="yes">

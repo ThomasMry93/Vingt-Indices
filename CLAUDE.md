@@ -50,6 +50,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 - Pendant une manche : liste des indices dévoilés **triée par numéro**, le dernier lu mis en évidence.
 - Fiche d'indice ouverte : ligne de réponse masquée par défaut avec le bouton Afficher/Masquer (même réglage que sur la carte).
 - Fin de carte (trouvée ou ratée) : bouton **Afficher tous les indices** (les 20, ceux non lus en retrait), avec un second bouton « Carte suivante » sous la liste.
+- Pas de zoom (viewport `user-scalable=no` + blocage du pincement en JS, `touch-action:manipulation`) ; portrait imposé (manifeste) et, en paysage sur téléphone, écran « Tourne ton téléphone ! » avec la mascotte (`#rotate`), car iOS ne permet pas de bloquer l'orientation.
 - Données des joueurs (cartes perso, modifications, suppressions, réglages) : `localStorage`, propre à chaque téléphone.
 
 ## Intégrer un export de l'utilisateur
