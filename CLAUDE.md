@@ -4,17 +4,18 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 
 - Jeu en ligne : https://thomasmry93.github.io/Vingt-Indices/ (GitHub Pages, branche `main`, dossier racine)
 - Installé comme web app (PWA) sur l'écran d'accueil iPhone / Android.
+- **Version démo** : https://thomasmry93.github.io/Vingt-Indices/demo/ (appli séparée, à installer à part). 20 cartes (7 Personnage, 7 Lieu, 6 Chose : les premières de chaque catégorie), pas de création / modification / suppression / import / export de cartes, bandeau « Version démo » en haut de chaque écran, données séparées (`localStorage` `vingtIndices.demo.v1`), icônes avec bandeau « DÉMO » (`demo/icon-*.png`, fichiers fixes). Page de test de la démo dans Claude : artifact « Vingt Indices – Démo ».
 
 ## Façon de travailler (demandée par l'utilisateur)
 
 - Les modifications se font et se testent d'abord **dans Claude** : mettre à jour uniquement la page du jeu dans Claude (artifact « Vingt Indices »).
 - **Ne rien envoyer sur GitHub** tant que l'utilisateur n'a pas validé explicitement (« mets à jour l'app », « envoie la MAJ »…). GitHub = version installée sur les téléphones.
-- À la validation : rebuild (`python3 build_app.py`), commit, push.
+- À la validation : rebuild (`python3 build_app.py`, qui produit la complète **et** la démo), commit, push. Mettre aussi à jour la page de test de la démo dans Claude si besoin.
 
 ## Fichiers
 
 - `source/vingt-indices.html` : **la source à modifier**. Page autonome (HTML + CSS + JS, sans librairie). Les cartes de base sont dans la constante `BUILTIN` (JSON sur une ligne).
-- `build_app.py` : génère la version installable à partir de la source → `index.html`, `manifest.webmanifest`, `sw.js` (cache hors connexion, versionné à chaque build). Lancer `python3 build_app.py` depuis la racine du dépôt.
+- `build_app.py` : génère **les deux versions** à partir de la source : la complète à la racine (`index.html`, `manifest.webmanifest`, `sw.js`) et la démo dans `demo/` (même code avec `const DEMO=true`, cartes réduites). Chaque MAJ met donc à jour les deux. Caches hors connexion séparés (`vingt-indices-<version>` / `vingt-indices-demo-<version>`) ; le service worker de la complète ne sert jamais `demo/`. Lancer `python3 build_app.py` depuis la racine du dépôt.
 - `icon-180/192/512.png` : icône style BD (« ? » rouge façon comics, entouré de 20 pastilles rouge/bleu/blanc cerclées de noir, sur fond jaune à pois).
 - Ne pas éditer `index.html` à la main : modifier la source puis relancer `build_app.py`.
 
