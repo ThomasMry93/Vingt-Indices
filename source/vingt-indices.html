@@ -606,11 +606,14 @@ function adjustSheet(){const g=S.game;return `<div class="overlay"><div class="s
 /* Cartes déjà jouées : 1 = trouvée, 2 = ratée (passées sans points : non comptées) */
 const byLine=c=>c.author?`<p class="byline">Carte créée par <b>${esc(c.author)}</b></p>`:"";
 const playedTag=(c,cls)=>S.playedShow&&S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} ${cls||""}">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:"";
+/* Carte ouverte : déclarer à la main si elle a déjà été jouée */
+function playState(c){const v=S.played[c.id]||0;
+ return `<p class="label" style="margin:.8em 0 .3em">Déjà jouée en partie</p><div class="row">${[[0,"Jamais"],[1,"✓ Trouvée"],[2,"✗ Ratée"]].map(([k,l])=>`<button class="small chipt ${v===k?"on":""}" data-setplay="${c.id}|${k}" aria-pressed="${v===k}">${l}</button>`).join("")}</div>`}
 function playedBar(){const d=deck(),n=d.filter(c=>S.played[c.id]).length,t=Object.keys(S.played).length;if(!t)return "";
  return `<div class="panel stack played-bar"><p class="label">Cartes déjà jouées</p>
   <p class="muted"><b>${n}</b> carte${n>1?"s":""} sur ${d.length} déjà jouée${n>1?"s":""} dans ce paquet. Le tirage pioche d'abord les cartes jamais jouées.</p>
   ${S.confirmPlayed?`<div class="row"><button class="small" style="flex:1" data-playedno>Annuler</button><button class="small ko" style="flex:1" data-playedreset>Tout oublier</button></div>`
-   :`<div class="row" style="justify-content:space-between"><button class="link" data-playedshow>${S.playedShow?"Masquer l'indicateur":"Afficher l'indicateur"}</button><button class="link" data-playedask>Réinitialiser</button></div>`}
+   :`<div class="row" style="justify-content:space-between"><button class="link" data-playedshow>${S.playedShow?"Masquer l'indicateur":"Afficher l'indicateur"}</button><button class="small" data-playedask>↺ Réinitialiser</button></div>`}
  </div>`}
 function startGame(){
   const players=S.players.map(s=>s.trim()).filter(Boolean);
@@ -773,7 +776,7 @@ function browse(){const b=S.browse;
  const c=b.cards[b.i];
  const seg=`<div class="seg" role="group" aria-label="Affichage"><button class="${b.mode==="hide"?"on":""}" data-bmode="hide" aria-pressed="${b.mode==="hide"}">Indices cachés</button><button class="${b.mode==="all"?"on":""}" data-bmode="all" aria-pressed="${b.mode==="all"}">Tous les indices</button></div>`;
  const head=`<section class="gcard"><header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">${playedTag(c,"inband")}${b.cards.length>1?`Carte ${b.i+1} / ${b.cards.length}`:"Lecture libre"}</span></header>
-   <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}${byLine(c)}</div></section>`;
+   <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}${byLine(c)}${playState(c)}</div></section>`;
  let body;
  if(b.mode==="all"){body=`<ol class="cluelist">${c.clues.map((t,i)=>`<li><span>${i+1}</span><p>${esc(t)}</p></li>`).join("")}</ol>`}
  else{body=`${board(b.used,"data-bn",false)}${clueList(c,b.used)}
@@ -1020,7 +1023,9 @@ function placeMascot(el,line){
   el.classList.toggle("bub-r",!best.right);el.classList.toggle("bub-down",best.v==="down");el.classList.toggle("bub-mid",best.v==="mid");
   el.style.transformOrigin="50% 100%";
 }
-function react(){const el=document.getElementById("mascot"),line=document.getElementById("mascotLine");if(!el)return;
+/* Petite mascotte qui surgit à chaque écran : désactivée à la demande (seule la grande mascotte de l'accueil reste). Mettre true pour la remettre. */
+const SMALL_MASCOT=false;
+function react(){const el=document.getElementById("mascot"),line=document.getElementById("mascotLine");if(!el||!SMALL_MASCOT)return;
   const g=S.game;
   const key=S.view==="round"&&g?["round",g.round,g.skip||0,g.used.length,S.clueOpen||0,g.result?1:0].join("|"):S.view;
   if(key===mascotKey)return;mascotKey=key;
@@ -1118,6 +1123,7 @@ function bind(){
     else if("playedshow" in d){syncPlayers();S.playedShow=!S.playedShow;save();render()}
     else if("playedask" in d){syncPlayers();S.confirmPlayed=true;render()}
     else if("playedno" in d){S.confirmPlayed=false;render()}
+    else if(d.setplay){const [id,v]=d.setplay.split("|");if(+v)S.played[id]=+v;else delete S.played[id];save();render();toast(+v===1?"Carte marquée « déjà trouvée »":+v===2?"Carte marquée « déjà ratée »":"Carte remise en « jamais jouée »")}
     else if("playedreset" in d){S.played={};S.confirmPlayed=false;save();render();toast("Cartes jouées oubliées")}
     else if("showall" in d){S.game.showAll=!S.game.showAll;S.noFx=true;render();if(S.game.showAll){const l=document.querySelector(".cluelist");if(l)l.scrollIntoView({behavior:REDUCE?"auto":"smooth",block:"start"})}}
     else if("reveal" in d){S.game.showAnswer=!S.game.showAnswer;render()}
