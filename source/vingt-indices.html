@@ -382,6 +382,7 @@ html[data-style=bd] .overlay .sheet{box-shadow:0 0 0 3px #141414,6px 6px 0 #1414
 @keyframes m-pop{from{transform:rotate(-6deg) scale(0)}}
 
 /* Indicateur « déjà jouée » */
+.byline{margin:.4em 0 0;font-size:.85rem;color:var(--ink-soft)}
 .ptag{display:inline-flex;align-items:center;gap:3px;font:800 .66rem/1 var(--body);letter-spacing:.02em;text-transform:none;padding:.32em .6em;border-radius:999px;background:var(--ok);color:#fff;white-space:nowrap}
 .ptag.ko{background:var(--ink-soft);color:var(--paper)}
 .ptag.inband{margin-right:8px;box-shadow:0 0 0 1.5px rgba(255,255,255,.8);vertical-align:1px}
@@ -507,11 +508,11 @@ const DEMO_IDS=(()=>{const n={},set=new Set();for(const c of BUILTIN){n[c.cat]=(
 async function unlock(code){let h="";try{h=await codeHash(code)}catch(e){return false}if(!UNLOCK_HASHES.includes(h))return false;try{localStorage.setItem(UNLOCK_KEY,"1")}catch(e){}DEMO=false;applyDemo();return true}
 function applyDemo(){document.documentElement.classList.toggle("demo",DEMO);const b=document.getElementById("demobar");if(b)b.hidden=!DEMO}
 function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
-function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,srcOff:S.srcOff,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen,played:S.played,playedShow:S.playedShow}))}catch(e){}}
+function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,srcOff:S.srcOff,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen,played:S.played,playedShow:S.playedShow,author:S.author}))}catch(e){}}
 const stored=load();
 /* Ancienne liste de joueurs par défaut, enregistrée telle quelle : on la remplace par la nouvelle. */
 if(Array.isArray(stored.players)&&stored.players.join("|")==="Léa|Hugo|Inès")delete stored.players;
-let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,srcOff:stored.srcOff||(stored.useBuiltin===false?["base"]:[]),players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.styleChosen?(stored.style||"bd"):"bd",styleChosen:!!stored.styleChosen,played:stored.played||{},playedShow:stored.playedShow!==false,off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
+let S={view:"home",mine:stored.mine||[],author:stored.author||"",useBuiltin:stored.useBuiltin!==false,srcOff:stored.srcOff||(stored.useBuiltin===false?["base"]:[]),players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.styleChosen?(stored.style||"bd"):"bd",styleChosen:!!stored.styleChosen,played:stored.played||{},playedShow:stored.playedShow!==false,off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
 
 const THEMES=["Personnage","Lieu","Chose"];
 const CATC={Personnage:["var(--red)","var(--red-ink)"],Lieu:["var(--blue)","var(--blue-ink)"],Chose:["var(--yellow)","var(--yellow-ink)"]};
@@ -595,6 +596,7 @@ function adjustSheet(){const g=S.game;return `<div class="overlay"><div class="s
   <div class="row">${undoBtn("small")}<button class="primary" style="flex:1" data-adjdone>Terminé</button></div>
  </div></div>`}
 /* Cartes déjà jouées : 1 = trouvée, 2 = ratée (passées sans points : non comptées) */
+const byLine=c=>c.author?`<p class="byline">Carte créée par <b>${esc(c.author)}</b></p>`:"";
 const playedTag=(c,cls)=>S.playedShow&&S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} ${cls||""}">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:"";
 function playedBar(){const d=deck(),n=d.filter(c=>S.played[c.id]).length,t=Object.keys(S.played).length;if(!t)return "";
  return `<div class="panel stack played-bar"><p class="label">Cartes déjà jouées</p>
@@ -695,7 +697,7 @@ function round(){
      <div class="gbody">
       <div class="stamp ${r.found?"ok":"ko"}">${r.found?"Trouvé":"Raté"}</div>
       <p class="label">La réponse</p>
-      <p class="answer">${esc(c.answer)}</p>
+      <p class="answer">${esc(c.answer)}</p>${byLine(c)}
       <p class="summary">${r.found?`<b>${esc(g.players[r.who])}</b> trouve${r.joker?" avec son jeton":""} après ${n} indice${n>1?"s":""}.`:`Personne n'a trouvé : le lecteur <b>${esc(g.players[g.reader])}</b> prend les 20 points.`}</p>
      </div></section>
      <div class="panel">${scoreList(d)}</div>
@@ -763,7 +765,7 @@ function browse(){const b=S.browse;
  const c=b.cards[b.i];
  const seg=`<div class="seg" role="group" aria-label="Affichage"><button class="${b.mode==="hide"?"on":""}" data-bmode="hide" aria-pressed="${b.mode==="hide"}">Indices cachés</button><button class="${b.mode==="all"?"on":""}" data-bmode="all" aria-pressed="${b.mode==="all"}">Tous les indices</button></div>`;
  const head=`<section class="gcard"><header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">${playedTag(c,"inband")}${b.cards.length>1?`Carte ${b.i+1} / ${b.cards.length}`:"Lecture libre"}</span></header>
-   <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}</div></section>`;
+   <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}${byLine(c)}</div></section>`;
  let body;
  if(b.mode==="all"){body=`<ol class="cluelist">${c.clues.map((t,i)=>`<li><span>${i+1}</span><p>${esc(t)}</p></li>`).join("")}</ol>`}
  else{body=`${board(b.used,"data-bn",false)}${clueList(c,b.used)}
@@ -816,7 +818,7 @@ function searchResults(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
  if(!all.length)return `<p class="muted">Aucune carte ne correspond${q?` à « ${esc(S.q)} »`:""}.</p>`;
  const isMine=c=>S.mine.some(m=>m.id===c.id);
  return `<p class="label">${all.length} carte${all.length>1?"s":""}</p>`+all.slice(0,lim).map(c=>`<div class="card-item">
-   <button class="linkrow" data-open="${c.id}"><b>${esc(c.answer)}</b><br><span class="tag"><i class="dot" style="background:${(CATC[c.cat]||CATC.Chose)[0]}"></i>${esc(c.cat)}${isMine(c)?" · ma carte":c.edited?" · modifiée":""}</span>${S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} inlist">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:""}</button>
+   <button class="linkrow" data-open="${c.id}"><b>${esc(c.answer)}</b><br><span class="tag"><i class="dot" style="background:${(CATC[c.cat]||CATC.Chose)[0]}"></i>${esc(c.cat)}${isMine(c)?(c.author?` · par ${esc(c.author)}`:" · ma carte"):c.edited?" · modifiée":""}</span>${S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} inlist">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:""}</button>
    ${DEMO?"":`<div class="row" style="flex-wrap:nowrap"><button class="small" data-edit="${c.id}">Modifier</button>
    ${S.confirmDel===c.id?`<button class="small ko" data-del="${c.id}">Confirmer</button>`:`<button class="small" data-askdel="${c.id}">Suppr.</button>`}</div>`}</div>`).join("")
    +(all.length>lim?`<button class="small block" data-more style="margin-top:10px">Afficher ${Math.min(40,all.length-lim)} de plus</button>`:"")}
@@ -839,14 +841,14 @@ function saveFile(fname,data,okMsg){
 const dayStamp=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 /* Tout le jeu (pour l'envoyer à Claude et mettre à jour le jeu de tout le monde) */
 function exportAll(){
- const list=[...base().map(c=>({id:c.id,cat:c.cat,answer:c.answer,clues:c.clues,source:c.edited?"base-modifiée":"base"})),...S.mine.map(c=>({id:c.id,cat:c.cat,answer:c.answer,clues:c.clues,source:"perso"}))];
+ const list=[...base().map(c=>({id:c.id,cat:c.cat,answer:c.answer,clues:c.clues,source:c.edited?"base-modifiée":"base"})),...S.mine.map(c=>({id:c.id,cat:c.cat,answer:c.answer,author:c.author||"",clues:c.clues,source:"perso"}))];
  const data=JSON.stringify({format:"vingt-indices",exportedAt:new Date().toISOString(),total:list.length,removedBaseIds:S.removed,cards:list},null,1);
  saveFile(`vingt-indices-cartes-${dayStamp()}.json`,data,"Fichier exporté");
 }
 /* Mes cartes Custom seulement (à garder ou à importer sur un autre téléphone) */
 function saveMine(){
  if(!S.mine.length){toast("Aucune carte Custom à enregistrer");return}
- const list=S.mine.map(c=>({id:c.id,cat:c.cat,answer:c.answer,clues:c.clues,source:"perso"}));
+ const list=S.mine.map(c=>({id:c.id,cat:c.cat,answer:c.answer,author:c.author||"",clues:c.clues,source:"perso"}));
  const data=JSON.stringify({format:"vingt-indices",kind:"custom",exportedAt:new Date().toISOString(),total:list.length,cards:list},null,1);
  saveFile(`vingt-indices-mes-cartes-${dayStamp()}.json`,data,`${list.length} carte${list.length>1?"s":""} enregistrée${list.length>1?"s":""}`);
 }
@@ -861,6 +863,7 @@ function importCards(text){
  arr.forEach((c,i)=>{
   if(!c||!c.answer||!Array.isArray(c.clues)||c.clues.length!==20||c.clues.some(t=>!String(t).trim())){bad++;return}
   const card={id:String(c.id||""),cat:toCat(c.cat||""),answer:String(c.answer).trim(),clues:c.clues.map(t=>String(t).trim())};
+  if(c.author&&String(c.author).trim())card.author=String(c.author).trim().slice(0,40);
   if(have.has(key(card))){dup++;return}
   if(!/^[\w-]+$/.test(card.id)||ids.has(card.id))card.id="m"+Date.now()+"_"+i;
   S.mine.push(card);have.add(key(card));ids.add(card.id);added++});
@@ -907,6 +910,7 @@ function editor(){const d=S.draft;return `
  <div class="panel stack">
   <label class="stack" style="gap:6px"><span class="label">Catégorie</span><select id="ecat">${THEMES.map(c=>`<option ${d.cat===c?"selected":""}>${c}</option>`).join("")}</select></label>
   <label class="stack" style="gap:6px"><span class="label">Réponse</span><input id="eans" value="${esc(d.answer)}" placeholder="Ex. : Le phare d'Alexandrie"></label>
+  ${d.id&&!S.mine.some(x=>x.id===d.id)?"":`<label class="stack" style="gap:6px"><span class="label">Créateur</span><input id="eauth" value="${esc(d.author||"")}" maxlength="40" placeholder="Votre nom ou pseudo" autocomplete="nickname"></label>`}
  </div>
  <div class="panel stack">
   <p class="label">20 indices · mélangez des faciles et des difficiles</p>
@@ -1016,7 +1020,7 @@ function after(){const cur=fxState();react();
 }
 
 /* ---------- événements ---------- */
-function syncDraft(){if(S.view!=="editor")return;const d=S.draft;d.cat=document.getElementById("ecat").value;d.answer=document.getElementById("eans").value;d.clues=d.clues.map((_,i)=>document.getElementById("ec"+i).value)}
+function syncDraft(){if(S.view!=="editor")return;const d=S.draft;d.cat=document.getElementById("ecat").value;d.answer=document.getElementById("eans").value;const ea=document.getElementById("eauth");if(ea)d.author=ea.value;d.clues=d.clues.map((_,i)=>document.getElementById("ec"+i).value)}
 function syncPlayers(){if(S.view!=="setup")return;document.querySelectorAll("[data-p]").forEach(el=>S.players[+el.dataset.p]=el.value)}
 function peelThen(btn,fn){if(S.busy)return;if(REDUCE){fn();return}S.busy=true;btn.classList.add("peel");SFX.peel();setTimeout(()=>{S.busy=false;fn()},190)}
 function bind(){
@@ -1073,8 +1077,8 @@ function bind(){
     else if("nextround" in d){nextRound();window.scrollTo(0,0)}
     else if("quit" in d){S.view="home";S.game=null;S.hist=[];render()}
     else if(DEMO&&("new" in d||d.edit||d.askdel||d.del||d.bdelask||d.bdel||"exportall" in d||"savemine" in d||"importfile" in d||"sharecloud" in d||"getcloud" in d)){S.view="unlock";render()}
-    else if("new" in d){S.draft={id:null,cat:"Personnage",answer:"",clues:Array(20).fill("")};S.view="editor";render()}
-    else if(d.edit){const c=[...S.mine,...base()].find(x=>x.id===d.edit);S.draft={id:c.id,cat:c.cat,answer:c.answer,clues:[...c.clues]};S.view="editor";render();window.scrollTo(0,0)}
+    else if("new" in d){S.draft={id:null,cat:"Personnage",answer:"",author:S.author||"",clues:Array(20).fill("")};S.view="editor";render()}
+    else if(d.edit){const c=[...S.mine,...base()].find(x=>x.id===d.edit);S.draft={id:c.id,cat:c.cat,answer:c.answer,author:c.author||(S.mine.some(x=>x.id===c.id)?S.author||"":""),clues:[...c.clues]};S.view="editor";render();window.scrollTo(0,0)}
     else if(d.resetedit){delete S.edits[d.resetedit];save();S.view="cards";render();toast("Version d'origine rétablie")}
     else if(d.lcat!==undefined){S.lcat=d.lcat;S.lim=40;render()}
     else if(d.lplay!==undefined){S.lplay=d.lplay;S.lim=40;render()}
@@ -1085,6 +1089,8 @@ function bind(){
       if(!dr.answer.trim()){toast("Indiquez la réponse");return}
       const missing=dr.clues.filter(c=>!c.trim()).length;
       if(missing){toast(`Il manque ${missing} indice${missing>1?"s":""}`);return}
+      const custom=!dr.id||S.mine.some(x=>x.id===dr.id);
+      if(custom){dr.author=(dr.author||"").trim().slice(0,40);if(!dr.author){toast("Indiquez le créateur de la carte");return}S.author=dr.author}else delete dr.author;
       if(dr.id&&S.mine.some(x=>x.id===dr.id)){S.mine=S.mine.map(x=>x.id===dr.id?dr:x)}
       else if(dr.id){S.edits[dr.id]={cat:dr.cat,answer:dr.answer.trim(),clues:dr.clues}}
       else{dr.id="m"+Date.now();S.mine.push(dr)}
