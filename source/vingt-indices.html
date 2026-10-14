@@ -840,10 +840,23 @@ function authorChips(){if(S.lsrc!=="custom")return "";const n={};customCards().f
  return `<p class="label" style="margin-bottom:-4px">Créateur</p><div class="row">${opts.map(([k,l,c])=>`<button class="small chipt ${la===k?"on":""}" data-lauth="${esc(k)}">${esc(l)} <span class="cnt">${c}</span></button>`).join("")}</div>`
   +(nb?(S.confirmAuthDel?`<div class="row"><button class="small" style="flex:1" data-authdelno>Annuler</button><button class="small ko" style="flex:1" data-authdel>Supprimer les ${nb}</button></div>`
    :`<button class="small ko" data-authdelask>🗑 Supprimer ${nb>1?`les ${nb} cartes`:"la carte"} ${who}</button>`):"")}
-function searchResults(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
+/* Cartes de la liste après recherche et filtres */
+function filteredCards(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
  const lp=S.lplay||"",pf={none:c=>!S.played[c.id],found:c=>S.played[c.id]===1,missed:c=>S.played[c.id]===2}[lp];
  const ls=S.lsrc||"",la=ls==="custom"?S.lauth||"":"";
- const all=(ls?bySource(ls):[...base(),...customCards()]).filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c))&&(!la||(authOf(c)||NOAUTH)===la));
+ return (ls?bySource(ls):[...base(),...customCards()]).filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c))&&(!la||(authOf(c)||NOAUTH)===la))}
+const filtersOn=()=>!!((S.q||"").trim()||S.lcat||S.lplay||S.lsrc||(S.lsrc==="custom"&&S.lauth));
+/* Exporter / partager seulement les cartes filtrées */
+const shareable=list=>list.filter(c=>S.mine.some(m=>m.id===c.id&&!m.cloud));
+function groupBar(){if(DEMO||!filtersOn())return "";const all=filteredCards();if(!all.length)return "";const sh=shareable(all).length;
+ return `<div class="row" style="margin-top:10px;align-items:center"><span class="muted" style="flex:1 1 100%">Ces ${all.length} carte${all.length>1?"s":""} seulement :</span>
+  <button class="small" style="flex:1" data-grpexport>Exporter (${all.length})</button>${sh?`<button class="small" style="flex:1" data-grpshare>Partager en ligne (${sh})</button>`:""}</div>`}
+function exportGroup(){const all=filteredCards();if(!all.length)return toast("Aucune carte à exporter");
+ const list=all.map(c=>({id:c.id,cat:c.cat,answer:c.answer,...(c.author?{author:c.author}:{}),clues:c.clues}));
+ const data=JSON.stringify({format:"vingt-indices",kind:"selection",exportedAt:new Date().toISOString(),total:list.length,cards:list},null,1);
+ saveFile(`vingt-indices-selection-${dayStamp()}.json`,data,`${list.length} carte${list.length>1?"s":""} exportée${list.length>1?"s":""}`)}
+function searchResults(){const q=norm((S.q||"").trim());
+ const all=filteredCards();
  const lim=S.lim||40;
  if(!all.length)return `<p class="muted">Aucune carte ne correspond${q?` à « ${esc(S.q)} »`:""}.</p>`;
  const isMine=c=>S.mine.some(m=>m.id===c.id);
@@ -888,7 +901,7 @@ function importCards(text,cloud){
  const arr=Array.isArray(d)?d:(d&&Array.isArray(d.cards)?d.cards.filter(c=>!c.source||c.source==="perso"):null);
  if(!arr)return toast("Ce fichier ne contient pas de cartes Vingt Indices");
  const key=dupKey,mineIds=new Set(S.mine.map(c=>c.id));
- const have=new Set(S.mine.map(key)),ids=new Set([...S.mine.map(c=>c.id),...BUILTIN.map(c=>c.id)]);
+ const have=new Set([...S.mine,...base()].map(key)),ids=new Set([...S.mine.map(c=>c.id),...BUILTIN.map(c=>c.id)]);
  let dup=0,skipped=0;const fresh=[];
  arr.forEach((c,i)=>{
   if(!c||!c.answer||!Array.isArray(c.clues)||c.clues.length!==20||c.clues.some(t=>!String(t).trim()))return;
@@ -921,8 +934,9 @@ function pickPanel(){const p=S.pick;if(!p)return "";const n={};p.cards.forEach(c
 const cloudKey=()=>{try{return localStorage.getItem(KEY_STORE)||""}catch(e){return ""}};
 function shareCloud(){
  if(!CLOUD_URL)return toast("Le partage en ligne arrive bientôt");
- const key=cloudKey();if(!key){S.askKey=true;render();setTimeout(()=>{const i=document.getElementById("cloudkey");if(i)i.focus()},50);return}
- const list=S.mine.filter(c=>!c.cloud).map(c=>({id:c.id,cat:c.cat,answer:c.answer,author:c.author||S.author||"",clues:c.clues}));
+ const key=cloudKey();if(!key){S.askKey=true;render();setTimeout(()=>{const i=document.getElementById("cloudkey");if(i){i.scrollIntoView({block:"center"});i.focus()}},50);return}
+ const only=S.shareIds;S.shareIds=null;
+ const list=S.mine.filter(c=>!c.cloud&&(!only||only.includes(c.id))).map(c=>({id:c.id,cat:c.cat,answer:c.answer,author:c.author||S.author||"",clues:c.clues}));
  if(!list.length)return toast("Aucune carte créée sur ce téléphone à partager");
  toast("Envoi en cours…");
  fetch(CLOUD_URL+"/cards",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key,cards:list})})
@@ -935,7 +949,7 @@ function getCloud(){
  if(!CLOUD_URL)return toast("La collection en ligne arrive bientôt");
  toast("Récupération en cours…");
  fetch(CLOUD_URL+"/cards",{cache:"no-store"}).then(r=>r.text()).then(t=>importCards(t,true)).catch(()=>toast("Pas de connexion : réessayez plus tard"))}
-function refreshList(){const r=document.getElementById("results");if(r)r.innerHTML=searchResults()}
+function refreshList(){const r=document.getElementById("results");if(r)r.innerHTML=searchResults();const g=document.getElementById("groupbar");if(g)g.innerHTML=groupBar()}
 function cards(){return `
  <div class="topbar"><button class="link" data-go="home">← Accueil</button>${DEMO?"<span></span>":`<button class="primary small" data-new>+ Nouvelle carte</button>`}</div>
  <h2>Les cartes</h2>
@@ -950,6 +964,7 @@ function cards(){return `
   ${(()=>{const L=[...base(),...S.mine],n={"":L.length,none:L.filter(c=>!S.played[c.id]).length,found:L.filter(c=>S.played[c.id]===1).length,missed:L.filter(c=>S.played[c.id]===2).length};
    return `<p class="label" style="margin-bottom:-4px">Déjà jouée en partie</p><div class="row">${[["","Toutes"],["none","Jamais jouées"],["found","✓ Trouvées"],["missed","✗ Ratées"]].map(([k,l])=>`<button class="small chipt ${(S.lplay||"")===k?"on":""}" data-lplay="${k}">${l} <span class="cnt">${n[k]}</span></button>`).join("")}</div>`})()}
   <div id="results">${searchResults()}</div>
+  <div id="groupbar">${groupBar()}</div>
  </div>
  ${DEMO?"":`${S.removed.length?`<div class="panel stack"><p class="label">Cartes supprimées (${S.removed.length})</p>
   <div class="row">${S.removed.map(id=>{const c=BUILTIN.find(x=>x.id===id);return c?`<button class="small" data-restore="${id}">↺ ${esc(c.answer)}</button>`:""}).join(" ")}</div>
@@ -1165,7 +1180,7 @@ function bind(){
     else if("reveal" in d){S.game.showAnswer=!S.game.showAnswer;render()}
     else if("nextround" in d){nextRound();window.scrollTo(0,0)}
     else if("quit" in d){S.view="home";S.game=null;S.hist=[];render()}
-    else if(DEMO&&("new" in d||d.edit||d.askdel||d.del||d.bdelask||d.bdel||"exportall" in d||"savemine" in d||"importfile" in d||"sharecloud" in d||"getcloud" in d)){S.view="unlock";render()}
+    else if(DEMO&&("new" in d||d.edit||d.askdel||d.del||d.bdelask||d.bdel||"exportall" in d||"savemine" in d||"importfile" in d||"sharecloud" in d||"getcloud" in d||"grpexport" in d||"grpshare" in d)){S.view="unlock";render()}
     else if(d.tpl){syncDraft();const c=[...base(),...customCards()].find(x=>x.id===d.tpl);if(c){Object.assign(S.draft,{cat:c.cat,answer:c.answer,clues:[...c.clues]});S.tplq="";render();window.scrollTo(0,0);toast(`« ${c.answer} » recopiée : modifiez-la puis enregistrez`)}}
     else if("new" in d){S.tplq="";S.draft={id:null,cat:"Personnage",answer:"",author:S.author||"",clues:Array(20).fill("")};S.view="editor";render()}
     else if(d.edit){const c=[...S.mine,...base()].find(x=>x.id===d.edit);S.draft={id:c.id,cat:c.cat,answer:c.answer,author:c.author||(S.mine.some(x=>x.id===c.id)?S.author||"":""),clues:[...c.clues]};S.view="editor";render();window.scrollTo(0,0)}
@@ -1189,7 +1204,9 @@ function bind(){
     else if("exportall" in d){exportAll()}
     else if("savemine" in d){saveMine()}
     else if("importfile" in d){const f=document.getElementById("importfile");if(f){f.value="";f.click()}}
-    else if("sharecloud" in d){shareCloud()}
+    else if("sharecloud" in d){S.shareIds=null;shareCloud()}
+    else if("grpexport" in d){exportGroup()}
+    else if("grpshare" in d){S.shareIds=shareable(filteredCards()).map(c=>c.id);shareCloud()}
     else if("getcloud" in d){getCloud()}
     else if("cloudunskip" in d){S.cloudSkip=[];save();getCloud()}
     else if("cloudkeyok" in d){const v=(document.getElementById("cloudkey")||{}).value||"";codeHash(v).then(h=>{if(UNLOCK_HASHES.includes(h)){try{localStorage.setItem(KEY_STORE,normCode(v))}catch(e){}S.askKey=false;S.keyErr=false;shareCloud()}else{S.keyErr=true;render()}})}
