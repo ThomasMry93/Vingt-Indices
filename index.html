@@ -550,7 +550,13 @@ function applyStyle(){if(!STYLES.some(t=>t.id===S.style))S.style="bd";const st=S
   document.documentElement.dataset.style=st.id;const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=st.bar}
 const catStyle=c=>{const k=CATC[c&&c.cat]||CATC.Chose;return `--cat:${k[0]};--cat-ink:${k[1]}`};
 const toCat=c=>/^Personn/.test(c)?"Personnage":c==="Lieu"?"Lieu":"Chose";
-S.mine=S.mine.map(c=>({...c,cat:toCat(c.cat)}));S.off=S.off.filter(t=>THEMES.includes(t));
+/* Clé de doublon : même réponse (sans accents, article, espaces en trop) et même catégorie */
+const dupKey=c=>String(c.answer||"").trim().replace(/\s+/g," ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/^(le |la |les |l'|l’)/,"")+"|"+c.cat;
+S.mine=S.mine.map(c=>({...c,cat:toCat(c.cat)}));
+/* Ménage : une carte venue du cloud qui double une carte déjà sur le téléphone est retirée */
+{const seen=new Set(),ids=new Set();S.mine.filter(c=>!c.cloud).forEach(c=>{seen.add(dupKey(c));ids.add(c.id)});
+ S.mine=S.mine.filter(c=>{if(!c.cloud)return true;const k=dupKey(c);if(seen.has(k)||ids.has(c.id))return false;seen.add(k);ids.add(c.id);return true});
+ if(S.mine.length!==(stored.mine||[]).length)save()}S.off=S.off.filter(t=>THEMES.includes(t));
 S.removed=S.removed||[];
 S.edits=S.edits||{};
 const base=()=>BUILTIN.filter(c=>(!DEMO||DEMO_IDS.has(c.id))&&!S.removed.includes(c.id)).map(c=>S.edits[c.id]?{...c,...S.edits[c.id],theme:S.edits[c.id].cat,edited:true}:c);
@@ -624,11 +630,14 @@ function adjustSheet(){const g=S.game;return `<div class="overlay"><div class="s
 /* Cartes déjà jouées : 1 = trouvée, 2 = ratée (passées sans points : non comptées) */
 const byLine=c=>c.author?`<p class="byline">Carte créée par <b>${esc(c.author)}</b></p>`:"";
 const playedTag=(c,cls)=>S.playedShow&&S.played[c.id]?`<span class="ptag ${S.played[c.id]===1?"":"ko"} ${cls||""}">${S.played[c.id]===1?"✓ déjà trouvée":"✗ déjà ratée"}</span>`:"";
+/* Carte ouverte : déclarer à la main si elle a déjà été jouée */
+function playState(c){const v=S.played[c.id]||0;
+ return `<p class="label" style="margin:.8em 0 .3em">Déjà jouée en partie</p><div class="row">${[[0,"Jamais"],[1,"✓ Trouvée"],[2,"✗ Ratée"]].map(([k,l])=>`<button class="small chipt ${v===k?"on":""}" data-setplay="${c.id}|${k}" aria-pressed="${v===k}">${l}</button>`).join("")}</div>`}
 function playedBar(){const d=deck(),n=d.filter(c=>S.played[c.id]).length,t=Object.keys(S.played).length;if(!t)return "";
  return `<div class="panel stack played-bar"><p class="label">Cartes déjà jouées</p>
   <p class="muted"><b>${n}</b> carte${n>1?"s":""} sur ${d.length} déjà jouée${n>1?"s":""} dans ce paquet. Le tirage pioche d'abord les cartes jamais jouées.</p>
   ${S.confirmPlayed?`<div class="row"><button class="small" style="flex:1" data-playedno>Annuler</button><button class="small ko" style="flex:1" data-playedreset>Tout oublier</button></div>`
-   :`<div class="row" style="justify-content:space-between"><button class="link" data-playedshow>${S.playedShow?"Masquer l'indicateur":"Afficher l'indicateur"}</button><button class="link" data-playedask>Réinitialiser</button></div>`}
+   :`<div class="row" style="justify-content:space-between"><button class="link" data-playedshow>${S.playedShow?"Masquer l'indicateur":"Afficher l'indicateur"}</button><button class="small" data-playedask>↺ Réinitialiser</button></div>`}
  </div>`}
 function startGame(){
   const players=S.players.map(s=>s.trim()).filter(Boolean);
@@ -791,7 +800,7 @@ function browse(){const b=S.browse;
  const c=b.cards[b.i];
  const seg=`<div class="seg" role="group" aria-label="Affichage"><button class="${b.mode==="hide"?"on":""}" data-bmode="hide" aria-pressed="${b.mode==="hide"}">Indices cachés</button><button class="${b.mode==="all"?"on":""}" data-bmode="all" aria-pressed="${b.mode==="all"}">Tous les indices</button></div>`;
  const head=`<section class="gcard"><header class="band"><span class="catname">${esc(c.cat)}</span><span class="cno">${playedTag(c,"inband")}${b.cards.length>1?`Carte ${b.i+1} / ${b.cards.length}`:"Lecture libre"}</span></header>
-   <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}${byLine(c)}</div></section>`;
+   <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}${byLine(c)}${playState(c)}</div></section>`;
  let body;
  if(b.mode==="all"){body=`<ol class="cluelist">${c.clues.map((t,i)=>`<li><span>${i+1}</span><p>${esc(t)}</p></li>`).join("")}</ol>`}
  else{body=`${board(b.used,"data-bn",false)}${clueList(c,b.used)}
@@ -836,10 +845,18 @@ function rules(){return `
  <button class="primary block big" data-go="setup">Jouer</button>`}
 
 const norm=t=>String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/^(le |la |les |l'|l’)/,"");
+/* Filtre Créateur (cartes Custom) : un bouton par nom, « Sans nom » pour les cartes sans créateur */
+const NOAUTH="__none";
+const authOf=c=>(c.author||"").trim();
+function authorChips(){if(S.lsrc!=="custom")return "";const n={};customCards().forEach(c=>{const a=authOf(c)||NOAUTH;n[a]=(n[a]||0)+1});
+ const names=Object.keys(n).filter(a=>a!==NOAUTH).sort((a,b)=>a.localeCompare(b,"fr",{sensitivity:"base"}));
+ if(!names.length)return "";
+ const opts=[["","Tous",customCards().length],...names.map(a=>[a,a,n[a]]),...(n[NOAUTH]?[[NOAUTH,"Sans nom",n[NOAUTH]]]:[])];
+ return `<p class="label" style="margin-bottom:-4px">Créateur</p><div class="row">${opts.map(([k,l,c])=>`<button class="small chipt ${(S.lauth||"")===k?"on":""}" data-lauth="${esc(k)}">${esc(l)} <span class="cnt">${c}</span></button>`).join("")}</div>`}
 function searchResults(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
  const lp=S.lplay||"",pf={none:c=>!S.played[c.id],found:c=>S.played[c.id]===1,missed:c=>S.played[c.id]===2}[lp];
- const ls=S.lsrc||"";
- const all=(ls?bySource(ls):[...base(),...customCards()]).filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c)));
+ const ls=S.lsrc||"",la=ls==="custom"?S.lauth||"":"";
+ const all=(ls?bySource(ls):[...base(),...customCards()]).filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c))&&(!la||(authOf(c)||NOAUTH)===la));
  const lim=S.lim||40;
  if(!all.length)return `<p class="muted">Aucune carte ne correspond${q?` à « ${esc(S.q)} »`:""}.</p>`;
  const isMine=c=>S.mine.some(m=>m.id===c.id);
@@ -883,7 +900,7 @@ function importCards(text,cloud){
  let d;try{d=JSON.parse(text)}catch(e){return toast(cloud?"Réponse du serveur illisible":"Fichier illisible : choisissez un fichier enregistré depuis Vingt Indices")}
  const arr=Array.isArray(d)?d:(d&&Array.isArray(d.cards)?d.cards.filter(c=>!c.source||c.source==="perso"):null);
  if(!arr)return toast("Ce fichier ne contient pas de cartes Vingt Indices");
- const key=c=>norm(c.answer)+"|"+c.cat;
+ const key=dupKey,mineIds=new Set(S.mine.map(c=>c.id));
  const have=new Set(S.mine.map(key)),ids=new Set([...S.mine.map(c=>c.id),...BUILTIN.map(c=>c.id)]);
  let added=0,dup=0,bad=0;
  arr.forEach((c,i)=>{
@@ -891,7 +908,7 @@ function importCards(text,cloud){
   const card={id:String(c.id||""),cat:toCat(c.cat||""),answer:String(c.answer).trim(),clues:c.clues.map(t=>String(t).trim())};
   if(c.author&&String(c.author).trim())card.author=String(c.author).trim().slice(0,40);
   if(cloud)card.cloud=1;
-  if(have.has(key(card))){dup++;return}
+  if(have.has(key(card))||(cloud&&mineIds.has(card.id))){dup++;return}
   if(!/^[\w-]+$/.test(card.id)||ids.has(card.id))card.id="m"+Date.now()+"_"+i;
   S.mine.push(card);have.add(key(card));ids.add(card.id);added++});
  save();render();
@@ -924,7 +941,7 @@ function cards(){return `
  <div class="panel stack">
   <p class="label">Liste des cartes</p>
   <input id="search" type="search" autocomplete="off" placeholder="Rechercher : Mozart, gare, crêpe…" value="${esc(S.q||"")}" aria-label="Rechercher une carte">
-  ${DEMO?"":`<p class="label" style="margin-bottom:-4px">Cartes</p><div class="row">${[["","Toutes",base().length+customCards().length],...SOURCES.map(([k,l])=>[k,l,bySource(k).length])].map(([k,l,n])=>`<button class="small chipt ${(S.lsrc||"")===k?"on":""}" data-lsrc="${k}">${l} <span class="cnt">${n}</span></button>`).join("")}</div>`}
+  ${DEMO?"":`<p class="label" style="margin-bottom:-4px">Cartes</p><div class="row">${[["","Toutes",base().length+customCards().length],...SOURCES.map(([k,l])=>[k,l,bySource(k).length])].map(([k,l,n])=>`<button class="small chipt ${(S.lsrc||"")===k?"on":""}" data-lsrc="${k}">${l} <span class="cnt">${n}</span></button>`).join("")}</div>${authorChips()}`}
   <p class="label" style="margin-bottom:-4px">Catégorie</p>
   <div class="row">${["",...THEMES].map(t=>`<button class="small chipt ${(S.lcat||"")===t?"on":""}" data-lcat="${t}">${t||"Toutes"}</button>`).join("")}</div>
   ${(()=>{const L=[...base(),...S.mine],n={"":L.length,none:L.filter(c=>!S.played[c.id]).length,found:L.filter(c=>S.played[c.id]===1).length,missed:L.filter(c=>S.played[c.id]===2).length};
@@ -1030,7 +1047,9 @@ function placeMascot(el,line){
   el.classList.toggle("bub-r",!best.right);el.classList.toggle("bub-down",best.v==="down");el.classList.toggle("bub-mid",best.v==="mid");
   el.style.transformOrigin="50% 100%";
 }
-function react(){const el=document.getElementById("mascot"),line=document.getElementById("mascotLine");if(!el)return;
+/* Petite mascotte qui surgit à chaque écran : désactivée à la demande (seule la grande mascotte de l'accueil reste). Mettre true pour la remettre. */
+const SMALL_MASCOT=false;
+function react(){const el=document.getElementById("mascot"),line=document.getElementById("mascotLine");if(!el||!SMALL_MASCOT)return;
   const g=S.game;
   const key=S.view==="round"&&g?["round",g.round,g.skip||0,g.used.length,S.clueOpen||0,g.result?1:0].join("|"):S.view;
   if(key===mascotKey)return;mascotKey=key;
@@ -1091,7 +1110,8 @@ function bind(){
     else if(d.delp){syncPlayers();S.players.splice(+d.delp,1);save();render()}
     else if(d.src){syncPlayers();const k=d.src;S.srcOff=S.srcOff.includes(k)?S.srcOff.filter(x=>x!==k):[...S.srcOff,k];save();render()}
     else if(d.bsrc){const k=d.bsrc;S.srcOff=S.srcOff.includes(k)?S.srcOff.filter(x=>x!==k):[...S.srcOff,k];save();newBrowse();render()}
-    else if(d.lsrc!==undefined){S.lsrc=d.lsrc;S.lim=40;render()}
+    else if(d.lsrc!==undefined){S.lsrc=d.lsrc;S.lauth="";S.lim=40;render()}
+    else if(d.lauth!==undefined){S.lauth=d.lauth;S.lim=40;render()}
     else if(d.theme){syncPlayers();const t=d.theme;S.off=S.off.includes(t)?S.off.filter(x=>x!==t):[...S.off,t];save();render()}
     else if(d.target){syncPlayers();S.target=+d.target;save();render()}
     else if("start" in d){syncPlayers();const v=document.getElementById("targetin");if(v)S.target=+v.value;startGame()}
@@ -1127,6 +1147,7 @@ function bind(){
     else if("playedshow" in d){syncPlayers();S.playedShow=!S.playedShow;save();render()}
     else if("playedask" in d){syncPlayers();S.confirmPlayed=true;render()}
     else if("playedno" in d){S.confirmPlayed=false;render()}
+    else if(d.setplay){const [id,v]=d.setplay.split("|");if(+v)S.played[id]=+v;else delete S.played[id];save();render();toast(+v===1?"Carte marquée « déjà trouvée »":+v===2?"Carte marquée « déjà ratée »":"Carte remise en « jamais jouée »")}
     else if("playedreset" in d){S.played={};S.confirmPlayed=false;save();render();toast("Cartes jouées oubliées")}
     else if("showall" in d){S.game.showAll=!S.game.showAll;S.noFx=true;render();if(S.game.showAll){const l=document.querySelector(".cluelist");if(l)l.scrollIntoView({behavior:REDUCE?"auto":"smooth",block:"start"})}}
     else if("reveal" in d){S.game.showAnswer=!S.game.showAnswer;render()}
@@ -1151,6 +1172,7 @@ function bind(){
       if(dr.id&&S.mine.some(x=>x.id===dr.id)){S.mine=S.mine.map(x=>x.id===dr.id?dr:x)}
       else if(dr.id){S.edits[dr.id]={cat:dr.cat,answer:dr.answer.trim(),clues:dr.clues}}
       else{dr.id="m"+Date.now();S.mine.push(dr)}
+      if(custom)dr.answer=dr.answer.trim();
       save();S.view="cards";render();toast("Carte enregistrée")}
     else if("exportall" in d){exportAll()}
     else if("savemine" in d){saveMine()}
