@@ -4,6 +4,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 
 - Jeu en ligne : https://thomasmry93.github.io/Vingt-Indices/ (GitHub Pages, branche `main`, dossier racine)
 - Installé comme web app (PWA) sur l'écran d'accueil iPhone / Android.
+- **Démo / jeu complet par code** : une seule appli, une seule adresse. Sans code, le jeu est en **démo** : 20 cartes (`DEMO_IDS` = les 7 premiers Personnages, 7 premiers Lieux, 6 premières Choses de `BUILTIN`), pas de création / modification / suppression / import / export de cartes, bandeau rouge « Version démo » en haut, lien « Débloquer le jeu complet » (accueil, écran Cartes). Le bon code (écran `unlock`) déverrouille le jeu complet sur le téléphone, une fois pour toutes (`localStorage` `vingtIndices.unlocked`, perdu à la désinstallation). Le code n'est pas écrit dans le source : seule son empreinte (`UNLOCK_HASH`, fonction `codeHash`, insensible à la casse, aux accents et aux espaces). Les téléphones qui avaient déjà joué avant l'arrivée du verrou sont déverrouillés automatiquement (`vingtIndices.lockSeen`). Limite connue : le dépôt est public, les cartes restent lisibles dans le code pour qui sait chercher.
 
 ## Façon de travailler (demandée par l'utilisateur)
 
