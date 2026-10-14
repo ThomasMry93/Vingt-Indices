@@ -4,8 +4,6 @@ Jeu de devinettes pour smartphone, de 2 à 8 joueurs. Une carte, 20 indices num�
 
 **Jouer :** https://thomasmry93.github.io/Vingt-Indices/
 
-**Version démo** (20 cartes, sans création ni modification de cartes) : https://thomasmry93.github.io/Vingt-Indices/demo/
-
 ## Principe
 
 À chaque carte, un joueur devient **lecteur** et tient le téléphone. Il peut consulter la réponse discrètement. Le joueur dont c'est le tour annonce un numéro de 1 à 20 ; le lecteur touche la gommette et lit l'indice à voix haute. Le joueur propose une réponse, le lecteur tape **Trouvé** ou **Raté**. En cas d'échec, on passe au joueur suivant. Le rôle de lecteur tourne à chaque carte.
@@ -45,6 +43,5 @@ Les mises à jour s'installent en arrière-plan ; un bandeau « Mettre à jour �
 ## Fichiers
 
 - `source/vingt-indices.html` : la source du jeu (HTML, CSS, JavaScript et cartes)
-- `build_app.py` : génère les deux versions installables (complète et démo) à partir de la source
-- `index.html`, `manifest.webmanifest`, `sw.js`, `icon-*.png` : la version complète installable et le mode hors connexion (générés, ne pas modifier à la main)
-- `demo/` : la version démo (générée), avec ses icônes « DÉMO »
+- `build_app.py` : génère la version installable à partir de la source
+- `index.html`, `manifest.webmanifest`, `sw.js`, `icon-*.png` : la version installable et le mode hors connexion (générés, ne pas modifier à la main)
