@@ -18,7 +18,7 @@ Offre gratuite Cloudflare largement suffisante (100 000 lectures et 1 000 envois
 
 ## Administration
 
-Ouvrir `https://vingt-indices-cartes.<votre-nom>.workers.dev/admin`, entrer le mot de passe `ADMIN_PASSWORD` : liste des cartes avec leurs 20 indices, boutons **Valider**, **Refuser**, **Supprimer**.
+Ouvrir `https://vingt-indices-cartes.<votre-nom>.workers.dev/admin`, entrer le mot de passe `ADMIN_PASSWORD` : les cartes sont rangées dans un dossier par créateur (à ouvrir / fermer), avec filtre par statut, recherche et tri ; boutons **Valider**, **Refuser**, **Supprimer** par carte, **Tout valider** et **Tout supprimer** par dossier.
 
 - `validée` : visible par tous les téléphones ; `en attente` / `refusée` : cachée.
 - Supprimer retire la carte du partage (les téléphones qui l'ont déjà récupérée la gardent).
