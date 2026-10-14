@@ -13,7 +13,7 @@ Offre gratuite Cloudflare largement suffisante (100 000 lectures et 1 000 envois
 5. **Relier le stockage** : page du Worker → **Settings** (ou **Bindings**) → **Add binding** → **KV namespace** → Variable name : `CARDS` → choisir `vingt-indices-cartes` → **Add / Deploy**.
 6. **Mot de passe d'administration** : **Settings → Variables and Secrets** → **Add** → type **Secret** → nom : `ADMIN_PASSWORD` → valeur : un mot de passe à vous → **Deploy**.
 7. Facultatif : pour valider les cartes à la main avant qu'elles soient visibles, ajouter une variable **Text** `AUTO_VALIDATE` = `false`.
-8. Copier l'adresse du Worker (en haut de sa page) : `https://vingt-indices-cartes.<votre-nom>.workers.dev`. Ouvrir cette adresse dans un navigateur : elle doit afficher `{"ok":true,...}`.
+8. Copier l'adresse du Worker (en haut de sa page) : `https://vingt-indices-cartes.<votre-nom>.workers.dev` (ici : `https://vingt-indices-cartes.thomas-morey.workers.dev`). Ouvrir cette adresse dans un navigateur : elle doit afficher `{"ok":true,...}`.
 9. Donner cette adresse à Claude pour la brancher dans l'appli.
 
 ## Administration
