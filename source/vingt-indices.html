@@ -495,7 +495,7 @@ const UNLOCK_KEY="vingtIndices.unlocked",LOCKSEEN_KEY="vingtIndices.lockSeen";
 const UNLOCK_SALT="vingt-indices/2026";
 // Empreintes SHA-256 des clés d'accès (les clés elles-mêmes ne sont pas écrites ici).
 // Saisie insensible à la casse, aux accents, aux espaces et aux tirets.
-const UNLOCK_HASHES=['1fffe36f253a6c0226c37817a5ec4231720cf3280835b36cc135493f2f4fd072', '4d7170cdc93206c77a9603b6a9e57f9e28d417ec27c5bceacd66a54d381c7e55', '2bc6fa46259fc8d59aad198b1873be32d2b179180cf153897f1ae24cc46781e3', '00ed92af62d591fa7a8a812468bb63fd83759e31283145902aac9694192b2f34', '30f874a5fc10a0f6610c8d1dcdb8aff258a327c8a0350ea716c5ef418e539309', 'e412ddf4483fecbe592daf248138c9e40f125803bb08bb1a14cda868b4c89bc5'];
+const UNLOCK_HASHES=['1fffe36f253a6c0226c37817a5ec4231720cf3280835b36cc135493f2f4fd072', '4d7170cdc93206c77a9603b6a9e57f9e28d417ec27c5bceacd66a54d381c7e55', '2bc6fa46259fc8d59aad198b1873be32d2b179180cf153897f1ae24cc46781e3', '00ed92af62d591fa7a8a812468bb63fd83759e31283145902aac9694192b2f34', '30f874a5fc10a0f6610c8d1dcdb8aff258a327c8a0350ea716c5ef418e539309', 'e412ddf4483fecbe592daf248138c9e40f125803bb08bb1a14cda868b4c89bc5', '187a163c20d5f36a918e1b5e2318696cf9e904bb0854b8ceff92a606702e6b6b'];
 const normCode=t=>String(t).trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f\s-]/g,"");
 async function codeHash(t){const d=new TextEncoder().encode(UNLOCK_SALT+normCode(t));const h=await crypto.subtle.digest("SHA-256",d);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 const DEMO_PER_CAT={Personnage:7,Lieu:7,Chose:6};
