@@ -16,7 +16,7 @@ Jeu de devinettes pour smartphone, inspiré du principe d'Indix / 20 Questions, 
 
 - `source/vingt-indices.html` : **la source à modifier**. Page autonome (HTML + CSS + JS, sans librairie). Les cartes de base sont dans la constante `BUILTIN` (JSON sur une ligne).
 - `build_app.py` : génère la version installable à partir de la source → `index.html`, `manifest.webmanifest`, `sw.js` (cache hors connexion, versionné à chaque build). Lancer `python3 build_app.py` depuis la racine du dépôt.
-- `cloudflare/` : serveur de la collection commune (à coller dans Cloudflare, pas servi par GitHub Pages).
+- `cloudflare/` : serveur de la collection commune (à coller dans Cloudflare, pas servi par GitHub Pages). Adresse : https://vingt-indices-cartes.thomas-morey.workers.dev (page `/admin`). Mode d'emploi pour l'utilisateur : Google Doc « Vingt Indices – Cartes partagées (Cloudflare et page admin) » dans le dossier Drive « Vingts Indices ».
 - `icon-180/192/512.png` : icône style BD (« ? » rouge façon comics, entouré de 20 pastilles rouge/bleu/blanc cerclées de noir, sur fond jaune à pois).
 - Ne pas éditer `index.html` à la main : modifier la source puis relancer `build_app.py`.
 
