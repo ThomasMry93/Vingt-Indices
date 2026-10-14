@@ -1,6 +1,6 @@
 // Hors connexion : l'appli est gardée en local. Une nouvelle version s'installe en arrière-plan
 // et attend que le joueur touche « Mettre à jour » (ou que l'appli soit fermée complètement).
-const CACHE="vingt-indices-20261014093702";
+const CACHE="vingt-indices-20261014111251";
 const SHELL=["./","index.html","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL.map(u=>new Request(u,{cache:"reload"})))))});
 self.addEventListener("message",e=>{if(e.data==="skipWaiting")self.skipWaiting()});
@@ -16,7 +16,8 @@ self.addEventListener("fetch",e=>{
     }));
     return;
   }
-  // Polices : copie locale, rafraîchie en arrière-plan.
+  // Polices : copie locale, rafraîchie en arrière-plan. Le reste (collection en ligne…) passe par le réseau.
+  if(!/fonts\.(googleapis|gstatic)\.com$/.test(url.hostname))return;
   e.respondWith(caches.open("vingt-indices-fonts").then(async c=>{
     const hit=await c.match(req);
     const net=fetch(req).then(r=>{if(r&&(r.ok||r.type==="opaque"))c.put(req,r.clone());return r}).catch(()=>hit);

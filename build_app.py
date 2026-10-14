@@ -103,7 +103,8 @@ self.addEventListener("fetch",e=>{{
     }}));
     return;
   }}
-  // Polices : copie locale, rafraîchie en arrière-plan.
+  // Polices : copie locale, rafraîchie en arrière-plan. Le reste (collection en ligne…) passe par le réseau.
+  if(!/fonts\\.(googleapis|gstatic)\\.com$/.test(url.hostname))return;
   e.respondWith(caches.open("vingt-indices-fonts").then(async c=>{{
     const hit=await c.match(req);
     const net=fetch(req).then(r=>{{if(r&&(r.ok||r.type==="opaque"))c.put(req,r.clone());return r}}).catch(()=>hit);
