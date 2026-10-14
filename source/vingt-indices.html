@@ -883,24 +883,25 @@ function importCards(text,cloud){
  if(!arr)return toast("Ce fichier ne contient pas de cartes Vingt Indices");
  const key=dupKey,mineIds=new Set(S.mine.map(c=>c.id));
  const have=new Set(S.mine.map(key)),ids=new Set([...S.mine.map(c=>c.id),...BUILTIN.map(c=>c.id)]);
- let dup=0;const fresh=[];
+ let dup=0,skipped=0;const fresh=[];
  arr.forEach((c,i)=>{
   if(!c||!c.answer||!Array.isArray(c.clues)||c.clues.length!==20||c.clues.some(t=>!String(t).trim()))return;
   const card={id:String(c.id||""),cat:toCat(c.cat||""),answer:String(c.answer).trim(),clues:c.clues.map(t=>String(t).trim())};
   if(c.author&&String(c.author).trim())card.author=String(c.author).trim().slice(0,40);
-  if(cloud){if(S.cloudSkip.includes(String(c.id)))return;card.cloud=1;card.cloudId=String(c.id)}
+  if(cloud){if(S.cloudSkip.includes(String(c.id))){skipped++;return}card.cloud=1;card.cloudId=String(c.id)}
   if(have.has(key(card))||(cloud&&mineIds.has(card.id))){dup++;return}
   if(!/^[\w-]+$/.test(card.id)||ids.has(card.id))card.id="m"+Date.now()+"_"+i;
   fresh.push(card);have.add(key(card));ids.add(card.id)});
  // Plusieurs créateurs : on demande lesquels importer
  const groups=[...new Set(fresh.map(c=>authOf(c)||NOAUTH))];
- if(groups.length>1){S.pick={cards:fresh,dup,cloud:!!cloud,sel:groups};render();
+ if(groups.length>1){S.pick={cards:fresh,dup,skipped,cloud:!!cloud,sel:groups};render();toast("Choisissez les créateurs à importer");
   setTimeout(()=>{const p=document.getElementById("pickpanel");if(p)p.scrollIntoView({behavior:REDUCE?"auto":"smooth",block:"center"})},60);return}
- commitImport(fresh,dup,cloud);
+ commitImport(fresh,dup,cloud,skipped);
 }
-function commitImport(list,dup,cloud){
+function commitImport(list,dup,cloud,skipped){
  S.mine.push(...list);const added=list.length;save();render();
- toast(added?`${added} carte${added>1?"s":""} ajoutée${added>1?"s":""}${dup?` · ${dup} déjà présente${dup>1?"s":""}`:""}`:dup?`Ces cartes sont déjà dans le jeu`:cloud?"Aucune nouvelle carte partagée":"Aucune carte valable dans ce fichier");
+ const sk=skipped?` · ${skipped} supprimée${skipped>1?"s":""} sur ce téléphone, ignorée${skipped>1?"s":""}`:"";
+ toast((added?`${added} carte${added>1?"s":""} ajoutée${added>1?"s":""}${dup?` · ${dup} déjà présente${dup>1?"s":""}`:""}`:dup?`Ces cartes sont déjà dans le jeu`:cloud?(skipped?"Aucune nouvelle carte":"Aucune carte partagée validée pour l'instant"):"Aucune carte valable dans ce fichier")+sk);
 }
 /* Choix des créateurs à importer */
 function pickPanel(){const p=S.pick;if(!p)return "";const n={};p.cards.forEach(c=>{const a=authOf(c)||NOAUTH;n[a]=(n[a]||0)+1});
@@ -956,6 +957,7 @@ function cards(){return `
   <button data-sharecloud ${S.mine.length?"":"disabled"}>Partager mes cartes</button>
   ${S.askKey?`<div class="stack" style="gap:6px"><p class="muted" style="font-size:.85rem">Pour partager, saisissez une fois la clé d'accès de ce téléphone.</p><div class="row" style="flex-wrap:nowrap"><input id="cloudkey" autocomplete="off" autocapitalize="characters" placeholder="Clé d'accès" aria-label="Clé d'accès"><button class="primary small" data-cloudkeyok>OK</button></div>${S.keyErr?`<p class="muted" style="color:var(--ko)">Clé non valable</p>`:""}</div>`:""}
   <button data-getcloud>Récupérer les cartes Custom</button>
+  ${S.cloudSkip.length?`<button class="link" data-cloudunskip>Récupérer aussi ${S.cloudSkip.length>1?`les ${S.cloudSkip.length} cartes partagées que j'ai supprimées`:"la carte partagée que j'ai supprimée"}</button>`:""}
   <p class="muted" style="font-size:.85rem">« Partager » enverra vos cartes Custom dans la collection commune en ligne ; « Récupérer » ajoutera dans votre jeu toutes les cartes de cette collection (sans doublon). Elles restent sur le téléphone même si elles disparaissent du cloud.</p>
  </div>
  <div class="panel stack"><p class="label">Exporter toutes les cartes</p>
@@ -1111,7 +1113,7 @@ function bind(){
     else if(d.lauth!==undefined){S.lauth=d.lauth;S.confirmAuthDel=false;S.lim=40;render()}
     else if(d.pickauth!==undefined){const p=S.pick,a=d.pickauth;if(p){p.sel=p.sel.includes(a)?p.sel.filter(x=>x!==a):[...p.sel,a];render()}}
     else if("pickno" in d){S.pick=null;render();toast("Import annulé")}
-    else if("pickok" in d){const p=S.pick;if(p){S.pick=null;commitImport(p.cards.filter(c=>p.sel.includes(authOf(c)||NOAUTH)),p.dup,p.cloud)}}
+    else if("pickok" in d){const p=S.pick;if(p){S.pick=null;commitImport(p.cards.filter(c=>p.sel.includes(authOf(c)||NOAUTH)),p.dup,p.cloud,p.skipped)}}
     else if("authdelask" in d){S.confirmAuthDel=true;render()}
     else if("authdelno" in d){S.confirmAuthDel=false;render()}
     else if("authdel" in d){const la=S.lauth||"",gone=S.mine.filter(c=>(authOf(c)||NOAUTH)===la);gone.forEach(skipCloud);S.mine=S.mine.filter(c=>!gone.includes(c));
@@ -1183,6 +1185,7 @@ function bind(){
     else if("importfile" in d){const f=document.getElementById("importfile");if(f){f.value="";f.click()}}
     else if("sharecloud" in d){shareCloud()}
     else if("getcloud" in d){getCloud()}
+    else if("cloudunskip" in d){S.cloudSkip=[];save();getCloud()}
     else if("cloudkeyok" in d){const v=(document.getElementById("cloudkey")||{}).value||"";codeHash(v).then(h=>{if(UNLOCK_HASHES.includes(h)){try{localStorage.setItem(KEY_STORE,normCode(v))}catch(e){}S.askKey=false;S.keyErr=false;shareCloud()}else{S.keyErr=true;render()}})}
   };
   a.onkeydown=e=>{if(e.target.id==="unlockcode"&&e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-unlock]");if(b)b.click()}};
