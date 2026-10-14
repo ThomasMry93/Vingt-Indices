@@ -492,15 +492,19 @@ const LS="vingtIndices.v1";
    de cartes). Le bon code déverrouille le jeu complet sur ce téléphone, une fois pour toutes (jusqu'à la
    désinstallation). Les téléphones qui avaient déjà joué avant l'arrivée du verrou restent déverrouillés. */
 const UNLOCK_KEY="vingtIndices.unlocked",LOCKSEEN_KEY="vingtIndices.lockSeen";
-const UNLOCK_HASH="c4fb7e52"; // empreinte du code (le code lui-même n'est pas écrit ici)
-const codeHash=t=>{let h=0x811c9dc5;for(const ch of String(t).trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f\s]/g,""))h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0;return h.toString(16)};
+const UNLOCK_SALT="vingt-indices/2026";
+// Empreintes SHA-256 des clés d'accès (les clés elles-mêmes ne sont pas écrites ici).
+// Saisie insensible à la casse, aux accents, aux espaces et aux tirets.
+const UNLOCK_HASHES=['1fffe36f253a6c0226c37817a5ec4231720cf3280835b36cc135493f2f4fd072', '4d7170cdc93206c77a9603b6a9e57f9e28d417ec27c5bceacd66a54d381c7e55', '2bc6fa46259fc8d59aad198b1873be32d2b179180cf153897f1ae24cc46781e3', '00ed92af62d591fa7a8a812468bb63fd83759e31283145902aac9694192b2f34', '30f874a5fc10a0f6610c8d1dcdb8aff258a327c8a0350ea716c5ef418e539309', 'e412ddf4483fecbe592daf248138c9e40f125803bb08bb1a14cda868b4c89bc5'];
+const normCode=t=>String(t).trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f\s-]/g,"");
+async function codeHash(t){const d=new TextEncoder().encode(UNLOCK_SALT+normCode(t));const h=await crypto.subtle.digest("SHA-256",d);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 const DEMO_PER_CAT={Personnage:7,Lieu:7,Chose:6};
 let DEMO=(()=>{try{
   if(localStorage.getItem(UNLOCK_KEY)==="1")return false;
   if(!localStorage.getItem(LOCKSEEN_KEY)){localStorage.setItem(LOCKSEEN_KEY,"1");if(localStorage.getItem(LS)){localStorage.setItem(UNLOCK_KEY,"1");return false}}
  }catch(e){}return true})();
 const DEMO_IDS=(()=>{const n={},set=new Set();for(const c of BUILTIN){n[c.cat]=(n[c.cat]||0)+1;if(n[c.cat]<=(DEMO_PER_CAT[c.cat]||0))set.add(c.id)}return set})();
-function unlock(code){if(codeHash(code)!==UNLOCK_HASH)return false;try{localStorage.setItem(UNLOCK_KEY,"1")}catch(e){}DEMO=false;applyDemo();return true}
+async function unlock(code){let h="";try{h=await codeHash(code)}catch(e){return false}if(!UNLOCK_HASHES.includes(h))return false;try{localStorage.setItem(UNLOCK_KEY,"1")}catch(e){}DEMO=false;applyDemo();return true}
 function applyDemo(){document.documentElement.classList.toggle("demo",DEMO);const b=document.getElementById("demobar");if(b)b.hidden=!DEMO}
 function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
 function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen,played:S.played,playedShow:S.playedShow}))}catch(e){}}
@@ -775,9 +779,9 @@ function unlockView(){return `
  <h2>Débloquer le jeu complet</h2>
  <div class="panel stack">
   <p>La version démo contient <b>${DEMO_IDS.size} cartes</b>. Le jeu complet en compte <b>${BUILTIN.length}</b> et permet de créer, modifier, supprimer et exporter ses propres cartes.</p>
-  <p class="muted">Entrez le code reçu pour débloquer le jeu complet sur ce téléphone. Il n'est demandé qu'une fois.</p>
-  <input id="unlockcode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" aria-label="Code de déverrouillage">
-  ${S.unlockErr?`<p class="unlock-err">Ce code n'est pas le bon. Vérifiez-le et réessayez.</p>`:""}
+  <p class="muted">Entrez votre clé d'accès pour débloquer le jeu complet sur ce téléphone. Elle n'est demandée qu'une fois.</p>
+  <input id="unlockcode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" aria-label="Clé d'accès">
+  ${S.unlockErr?`<p class="unlock-err">Cette clé n'est pas valable. Vérifiez-la et réessayez.</p>`:""}
   <button class="primary block big" data-unlock>Débloquer</button>
  </div>`}
 function rules(){return `
@@ -1014,8 +1018,8 @@ function bind(){
     else if("skipno" in d){S.confirmSkip=false;render()}
     else if("skipyes" in d){skipCard()}
     else if("unlock" in d){const v=(document.getElementById("unlockcode")||{}).value||"";
-      if(unlock(v)){S.unlockErr=false;S.view="home";render();window.scrollTo(0,0);toast(`Jeu complet débloqué : ${BUILTIN.length} cartes !`);SFX.win();confetti(true)}
-      else{S.unlockErr=true;render();SFX.ko();const i=document.getElementById("unlockcode");if(i){i.value=v;i.focus()}}}
+      unlock(v).then(ok=>{if(ok){S.unlockErr=false;S.view="home";render();window.scrollTo(0,0);toast(`Jeu complet débloqué : ${BUILTIN.length} cartes !`);SFX.win();confetti(true)}
+      else{S.unlockErr=true;render();SFX.ko();const i=document.getElementById("unlockcode");if(i){i.value=v;i.focus()}}})}
     else if("playedshow" in d){syncPlayers();S.playedShow=!S.playedShow;save();render()}
     else if("playedask" in d){syncPlayers();S.confirmPlayed=true;render()}
     else if("playedno" in d){S.confirmPlayed=false;render()}
