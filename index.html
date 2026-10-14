@@ -531,11 +531,11 @@ const DEMO_IDS=(()=>{const n={},set=new Set();for(const c of BUILTIN){n[c.cat]=(
 async function unlock(code){let h="";try{h=await codeHash(code)}catch(e){return false}if(!UNLOCK_HASHES.includes(h))return false;try{localStorage.setItem(UNLOCK_KEY,"1")}catch(e){}DEMO=false;applyDemo();return true}
 function applyDemo(){document.documentElement.classList.toggle("demo",DEMO);const b=document.getElementById("demobar");if(b)b.hidden=!DEMO}
 function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
-function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen,played:S.played,playedShow:S.playedShow}))}catch(e){}}
+function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,srcOff:S.srcOff,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen,played:S.played,playedShow:S.playedShow}))}catch(e){}}
 const stored=load();
 /* Ancienne liste de joueurs par défaut, enregistrée telle quelle : on la remplace par la nouvelle. */
 if(Array.isArray(stored.players)&&stored.players.join("|")==="Léa|Hugo|Inès")delete stored.players;
-let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.styleChosen?(stored.style||"bd"):"bd",styleChosen:!!stored.styleChosen,played:stored.played||{},playedShow:stored.playedShow!==false,off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
+let S={view:"home",mine:stored.mine||[],useBuiltin:stored.useBuiltin!==false,srcOff:stored.srcOff||(stored.useBuiltin===false?["base"]:[]),players:stored.players||["Joueur 1","Joueur 2"],removed:stored.removed||[],edits:stored.edits||{},target:stored.target||50,useTokens:stored.useTokens!==false,sound:stored.sound!==false,style:stored.styleChosen?(stored.style||"bd"):"bd",styleChosen:!!stored.styleChosen,played:stored.played||{},playedShow:stored.playedShow!==false,off:stored.off||[],game:null,draft:null,clueOpen:null,confirmDel:null};
 
 const THEMES=["Personnage","Lieu","Chose"];
 const CATC={Personnage:["var(--red)","var(--red-ink)"],Lieu:["var(--blue)","var(--blue-ink)"],Chose:["var(--yellow)","var(--yellow-ink)"]};
@@ -551,7 +551,12 @@ S.mine=S.mine.map(c=>({...c,cat:toCat(c.cat)}));S.off=S.off.filter(t=>THEMES.inc
 S.removed=S.removed||[];
 S.edits=S.edits||{};
 const base=()=>BUILTIN.filter(c=>(!DEMO||DEMO_IDS.has(c.id))&&!S.removed.includes(c.id)).map(c=>S.edits[c.id]?{...c,...S.edits[c.id],theme:S.edits[c.id].cat,edited:true}:c);
-function deck(){return [...(S.useBuiltin||DEMO?base().filter(c=>!S.off.includes(c.theme)):[]),...(DEMO?[]:S.mine)]}
+/* Sources de cartes : « base » (cartes du jeu) et « custom » (cartes créées sur le téléphone, et plus tard cartes partagées) */
+const SOURCES=[["base","Base"],["custom","Custom"]];
+const customCards=()=>DEMO?[]:S.mine;
+const bySource=k=>k==="base"?base():customCards();
+function deck(){const off=DEMO?[]:S.srcOff;return [...(off.includes("base")?[]:base()),...(off.includes("custom")?[]:customCards())].filter(c=>!S.off.includes(c.cat))}
+const srcChips=attr=>DEMO?"":`<div class="row">${SOURCES.map(([k,l])=>`<button class="small chipt ${S.srcOff.includes(k)?"":"on"}" ${attr}="${k}" aria-pressed="${!S.srcOff.includes(k)}">${l} <span class="cnt">${bySource(k).length}</span></button>`).join("")}</div>`;
 function removeCard(id){if(S.mine.some(c=>c.id===id))S.mine=S.mine.filter(c=>c.id!==id);else if(!S.removed.includes(id))S.removed.push(id);save()}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -684,14 +689,16 @@ function setup(){return `
  <h2>Les joueurs</h2>
  <div class="panel stack" id="plist">${S.players.map((p,i)=>`<div class="row" style="flex-wrap:nowrap"><input id="p${i}" data-p="${i}" value="${esc(p)}" placeholder="Prénom" aria-label="Joueur ${i+1}" style="flex:1"><button class="small" data-delp="${i}" aria-label="Retirer ${esc(p||"ce joueur")}">✕</button></div>`).join("")}
  ${S.players.length<8?`<button class="small" data-addp>+ Ajouter un joueur</button>`:""}</div>
- ${S.useBuiltin?`<div class="panel stack">
+ <div class="panel stack">
+  ${DEMO?"":`<p class="label">Cartes</p>${srcChips("data-src")}`}
   <p class="label">Catégories</p>
   <div class="row">${THEMES.map(t=>`<button class="small chipt ${S.off.includes(t)?"":"on"}" data-theme="${esc(t)}" aria-pressed="${!S.off.includes(t)}">${esc(t)}</button>`).join("")}</div>
- </div>`:""}
+  <p class="muted">${deck().length} carte${deck().length>1?"s":""} dans le paquet.</p>
+ </div>
  ${playedBar()}
  <div class="panel stack">
   <p class="label">Points à atteindre</p>
-  <p class="muted">La partie s'arrête à la fin de la carte où un joueur atteint ce score. ${deck().length} cartes dans le paquet.</p>
+  <p class="muted">La partie s'arrête à la fin de la carte où un joueur atteint ce score.</p>
   <div class="row">${[30,50,80,100].map(v=>`<button class="small chipt ${S.target===v?"on":""}" data-target="${v}">${v}</button>`).join("")}
    <input id="targetin" type="number" inputmode="numeric" min="5" max="999" value="${S.target}" aria-label="Points à atteindre" style="width:5.5em;flex:none"></div>
   <label class="row" style="justify-content:space-between;flex-wrap:nowrap;padding-top:6px;border-top:1.5px dashed var(--rule)"><span><b>Jeton de réponse</b><br><span class="muted">Chaque joueur peut, une fois par partie, répondre hors de son tour.</span></span><input type="checkbox" id="usetokens" ${S.useTokens?"checked":""} style="transform:scale(1.4)"></label>
@@ -775,7 +782,7 @@ function final(){const g=S.game;const ord=g.players.map((p,i)=>({p,s:g.scores[i]
 function newBrowse(){const cards=shuffle(deck());S.browse={cards,i:0,mode:(S.browse&&S.browse.mode)||"hide",used:[],showAnswer:false}}
 function browse(){const b=S.browse;
  const top=`<div class="topbar"><button class="link" data-go="${b.from||"home"}">← ${b.from?"Liste des cartes":"Accueil"}</button>${soundBtn()}</div>
- ${S.useBuiltin&&!b.from?`<div class="row">${THEMES.map(t=>`<button class="small chipt ${S.off.includes(t)?"":"on"}" data-btheme="${esc(t)}" aria-pressed="${!S.off.includes(t)}">${esc(t)}</button>`).join("")}</div>`:""}`;
+ ${!b.from?`${srcChips("data-bsrc")}<div class="row">${THEMES.map(t=>`<button class="small chipt ${S.off.includes(t)?"":"on"}" data-btheme="${esc(t)}" aria-pressed="${!S.off.includes(t)}">${esc(t)}</button>`).join("")}</div>`:""}`;
  if(!b.cards.length)return top+`<div class="panel"><p class="muted">Aucune carte dans les catégories choisies. Activez au moins une catégorie.</p></div>`;
  const c=b.cards[b.i];
  const seg=`<div class="seg" role="group" aria-label="Affichage"><button class="${b.mode==="hide"?"on":""}" data-bmode="hide" aria-pressed="${b.mode==="hide"}">Indices cachés</button><button class="${b.mode==="all"?"on":""}" data-bmode="all" aria-pressed="${b.mode==="all"}">Tous les indices</button></div>`;
@@ -827,7 +834,8 @@ function rules(){return `
 const norm=t=>String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/^(le |la |les |l'|l’)/,"");
 function searchResults(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
  const lp=S.lplay||"",pf={none:c=>!S.played[c.id],found:c=>S.played[c.id]===1,missed:c=>S.played[c.id]===2}[lp];
- const all=[...base(),...S.mine].filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c)));
+ const ls=S.lsrc||"";
+ const all=(ls?bySource(ls):[...base(),...customCards()]).filter(c=>(!lc||c.cat===lc)&&(!q||norm(c.answer).includes(q))&&(!pf||pf(c)));
  const lim=S.lim||40;
  if(!all.length)return `<p class="muted">Aucune carte ne correspond${q?` à « ${esc(S.q)} »`:""}.</p>`;
  const isMine=c=>S.mine.some(m=>m.id===c.id);
@@ -859,10 +867,11 @@ function cards(){return `
  <div class="topbar"><button class="link" data-go="home">← Accueil</button>${DEMO?"<span></span>":`<button class="primary small" data-new>+ Nouvelle carte</button>`}</div>
  <h2>Les cartes</h2>
  ${playedBar()}
- ${DEMO?`<div class="panel stack demo-note"><p><b>Version démo</b> : ${DEMO_IDS.size} cartes à jouer.</p><p class="muted">Le jeu complet compte ${BUILTIN.length} cartes et permet de créer ses propres cartes, de les modifier, de les supprimer et de les exporter.</p><button class="primary" data-go="unlock">Débloquer le jeu complet</button></div>`:`<label class="row panel" style="justify-content:space-between;flex-wrap:nowrap"><span><b>Cartes de base</b><br><span class="muted">${base().length} cartes · ${S.mine.length} carte${S.mine.length>1?"s":""} perso</span></span><input type="checkbox" id="usebuiltin" ${S.useBuiltin?"checked":""} style="transform:scale(1.4)"></label>`}
+ ${DEMO?`<div class="panel stack demo-note"><p><b>Version démo</b> : ${DEMO_IDS.size} cartes à jouer.</p><p class="muted">Le jeu complet compte ${BUILTIN.length} cartes et permet de créer ses propres cartes, de les modifier, de les supprimer et de les exporter.</p><button class="primary" data-go="unlock">Débloquer le jeu complet</button></div>`:""}
  <div class="panel stack">
   <p class="label">Liste des cartes</p>
   <input id="search" type="search" autocomplete="off" placeholder="Rechercher : Mozart, gare, crêpe…" value="${esc(S.q||"")}" aria-label="Rechercher une carte">
+  ${DEMO?"":`<p class="label" style="margin-bottom:-4px">Cartes</p><div class="row">${[["","Toutes",base().length+customCards().length],...SOURCES.map(([k,l])=>[k,l,bySource(k).length])].map(([k,l,n])=>`<button class="small chipt ${(S.lsrc||"")===k?"on":""}" data-lsrc="${k}">${l} <span class="cnt">${n}</span></button>`).join("")}</div>`}
   <p class="label" style="margin-bottom:-4px">Catégorie</p>
   <div class="row">${["",...THEMES].map(t=>`<button class="small chipt ${(S.lcat||"")===t?"on":""}" data-lcat="${t}">${t||"Toutes"}</button>`).join("")}</div>
   ${(()=>{const L=[...base(),...S.mine],n={"":L.length,none:L.filter(c=>!S.played[c.id]).length,found:L.filter(c=>S.played[c.id]===1).length,missed:L.filter(c=>S.played[c.id]===2).length};
@@ -1012,6 +1021,9 @@ function bind(){
     else if("sound" in d){S.sound=!S.sound;save();render();if(S.sound)SFX.soft()}
     else if("addp" in d){syncPlayers();S.players.push("");save();render();const l=document.querySelectorAll("[data-p]");l[l.length-1].focus()}
     else if(d.delp){syncPlayers();S.players.splice(+d.delp,1);save();render()}
+    else if(d.src){syncPlayers();const k=d.src;S.srcOff=S.srcOff.includes(k)?S.srcOff.filter(x=>x!==k):[...S.srcOff,k];save();render()}
+    else if(d.bsrc){const k=d.bsrc;S.srcOff=S.srcOff.includes(k)?S.srcOff.filter(x=>x!==k):[...S.srcOff,k];save();newBrowse();render()}
+    else if(d.lsrc!==undefined){S.lsrc=d.lsrc;S.lim=40;render()}
     else if(d.theme){syncPlayers();const t=d.theme;S.off=S.off.includes(t)?S.off.filter(x=>x!==t):[...S.off,t];save();render()}
     else if(d.target){syncPlayers();S.target=+d.target;save();render()}
     else if("start" in d){syncPlayers();const v=document.getElementById("targetin");if(v)S.target=+v.value;startGame()}
@@ -1079,7 +1091,7 @@ function bind(){
       catch(err){toast("Code invalide : collez le texte copié depuis « Copier mes cartes »")}}
   };
   a.onkeydown=e=>{if(e.target.id==="unlockcode"&&e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-unlock]");if(b)b.click()}};
-  a.onchange=e=>{if(e.target.id==="usetokens"){S.useTokens=e.target.checked;save();return}if(e.target.id==="usebuiltin"){S.useBuiltin=e.target.checked;save();render()}};
+  a.onchange=e=>{if(e.target.id==="usetokens"){S.useTokens=e.target.checked;save();return}};
   a.oninput=e=>{if(e.target.id==="search"){S.q=e.target.value;S.lim=40;refreshList();return}if(e.target.id==="targetin"){S.target=+e.target.value;save();document.querySelectorAll("[data-target]").forEach(b=>b.classList.toggle("on",+b.dataset.target===S.target));return}if(e.target.dataset.p!==undefined){S.players[+e.target.dataset.p]=e.target.value;save()}};
 }
 
