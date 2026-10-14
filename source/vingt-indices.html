@@ -820,23 +820,52 @@ function searchResults(){const q=norm((S.q||"").trim());const lc=S.lcat||"";
    ${DEMO?"":`<div class="row" style="flex-wrap:nowrap"><button class="small" data-edit="${c.id}">Modifier</button>
    ${S.confirmDel===c.id?`<button class="small ko" data-del="${c.id}">Confirmer</button>`:`<button class="small" data-askdel="${c.id}">Suppr.</button>`}</div>`}</div>`).join("")
    +(all.length>lim?`<button class="small block" data-more style="margin-top:10px">Afficher ${Math.min(40,all.length-lim)} de plus</button>`:"")}
+/* Enregistrer un fichier sur le téléphone : feuille de partage (iPhone : « Enregistrer dans Fichiers »),
+   sinon téléchargement, sinon copie dans le presse-papiers. Dans Claude : demande d'enregistrement. */
+function saveFile(fname,data,okMsg){
+ const clip=()=>{try{navigator.clipboard.writeText(data).then(()=>toast("Fichier copié : collez-le dans un fichier ou dans la conversation"),()=>toast("Enregistrement impossible sur cet appareil"))}catch(e){toast("Enregistrement impossible sur cet appareil")}};
+ const local=()=>{try{const file=new File([data],fname,{type:"application/json"});
+   if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:"Cartes Vingt Indices"}).catch(e=>{if(e&&e.name!=="AbortError")clip()});return}
+   if(!window.claude){const u=URL.createObjectURL(file),l=document.createElement("a");l.href=u;l.download=fname;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast(okMsg);return}
+  }catch(e){}clip()};
+ Promise.resolve(window.claude?.use?.("downloads")).then(dl=>{
+  if(!dl){local();return}
+  dl.save({filename:fname,data}).then(()=>toast(okMsg),err=>{
+   if(err&&err.code==="declined")return;
+   if(err&&err.code==="rate_limited"){toast("Un enregistrement est déjà en cours");return}
+   local()})
+ }).catch(local);
+}
+const dayStamp=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
+/* Tout le jeu (pour l'envoyer à Claude et mettre à jour le jeu de tout le monde) */
 function exportAll(){
  const list=[...base().map(c=>({id:c.id,cat:c.cat,answer:c.answer,clues:c.clues,source:c.edited?"base-modifiée":"base"})),...S.mine.map(c=>({id:c.id,cat:c.cat,answer:c.answer,clues:c.clues,source:"perso"}))];
  const data=JSON.stringify({format:"vingt-indices",exportedAt:new Date().toISOString(),total:list.length,removedBaseIds:S.removed,cards:list},null,1);
- const d=new Date(),stamp=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
- const fname=`vingt-indices-cartes-${stamp}.json`;
- const clip=()=>{try{navigator.clipboard.writeText(data).then(()=>toast("Export copié : collez-le dans un fichier ou dans la conversation"),()=>toast("Export impossible sur cet appareil"))}catch(e){toast("Export impossible sur cet appareil")}};
- const copy=()=>{try{const file=new File([data],fname,{type:"application/json"});
-   if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:"Cartes Vingt Indices"}).catch(e=>{if(e&&e.name!=="AbortError")clip()});return}
-   if(!window.claude){const u=URL.createObjectURL(file),l=document.createElement("a");l.href=u;l.download=fname;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast("Fichier exporté");return}
-  }catch(e){}clip()};
- Promise.resolve(window.claude?.use?.("downloads")).then(dl=>{
-  if(!dl){copy();return}
-  dl.save({filename:fname,data}).then(()=>toast("Fichier exporté"),err=>{
-   if(err&&err.code==="declined")return;
-   if(err&&err.code==="rate_limited"){toast("Un export est déjà en cours");return}
-   copy()})
- }).catch(copy);
+ saveFile(`vingt-indices-cartes-${dayStamp()}.json`,data,"Fichier exporté");
+}
+/* Mes cartes Custom seulement (à garder ou à importer sur un autre téléphone) */
+function saveMine(){
+ if(!S.mine.length){toast("Aucune carte Custom à enregistrer");return}
+ const list=S.mine.map(c=>({id:c.id,cat:c.cat,answer:c.answer,clues:c.clues,source:"perso"}));
+ const data=JSON.stringify({format:"vingt-indices",kind:"custom",exportedAt:new Date().toISOString(),total:list.length,cards:list},null,1);
+ saveFile(`vingt-indices-mes-cartes-${dayStamp()}.json`,data,`${list.length} carte${list.length>1?"s":""} enregistrée${list.length>1?"s":""}`);
+}
+/* Importer un fichier : « mes cartes » ou export complet (on n'y prend que les cartes perso). Pas de doublons. */
+function importCards(text){
+ let d;try{d=JSON.parse(text)}catch(e){return toast("Fichier illisible : choisissez un fichier enregistré depuis Vingt Indices")}
+ const arr=Array.isArray(d)?d:(d&&Array.isArray(d.cards)?d.cards.filter(c=>!c.source||c.source==="perso"):null);
+ if(!arr)return toast("Ce fichier ne contient pas de cartes Vingt Indices");
+ const key=c=>norm(c.answer)+"|"+c.cat;
+ const have=new Set(S.mine.map(key)),ids=new Set([...S.mine.map(c=>c.id),...BUILTIN.map(c=>c.id)]);
+ let added=0,dup=0,bad=0;
+ arr.forEach((c,i)=>{
+  if(!c||!c.answer||!Array.isArray(c.clues)||c.clues.length!==20||c.clues.some(t=>!String(t).trim())){bad++;return}
+  const card={id:String(c.id||""),cat:toCat(c.cat||""),answer:String(c.answer).trim(),clues:c.clues.map(t=>String(t).trim())};
+  if(have.has(key(card))){dup++;return}
+  if(!/^[\w-]+$/.test(card.id)||ids.has(card.id))card.id="m"+Date.now()+"_"+i;
+  S.mine.push(card);have.add(key(card));ids.add(card.id);added++});
+ save();render();
+ toast(added?`${added} carte${added>1?"s":""} ajoutée${added>1?"s":""}${dup?` · ${dup} déjà présente${dup>1?"s":""}`:""}`:dup?`Ces cartes sont déjà dans le jeu`:"Aucune carte valable dans ce fichier");
 }
 function refreshList(){const r=document.getElementById("results");if(r)r.innerHTML=searchResults()}
 function cards(){return `
@@ -857,15 +886,17 @@ function cards(){return `
  ${DEMO?"":`${S.removed.length?`<div class="panel stack"><p class="label">Cartes supprimées (${S.removed.length})</p>
   <div class="row">${S.removed.map(id=>{const c=BUILTIN.find(x=>x.id===id);return c?`<button class="small" data-restore="${id}">↺ ${esc(c.answer)}</button>`:""}).join(" ")}</div>
   <button class="small" data-restoreall>Tout restaurer</button></div>`:""}
- <div class="panel stack"><p class="label">Exporter toutes les cartes</p>
-  <p class="muted">Crée un fichier avec toutes les cartes telles qu'elles sont sur ce téléphone : modifications et suppressions comprises, plus vos cartes perso. Envoyez ce fichier à Claude pour mettre à jour le jeu pour tout le monde.</p>
-  <button class="primary" data-exportall>Exporter (${[...base(),...S.mine].length} cartes)</button>
+ <div class="panel stack"><p class="label">Mes cartes Custom (${S.mine.length})</p>
+  <p class="muted">Vos cartes Custom restent sur ce téléphone. Enregistrez-les dans un fichier pour les garder ou les envoyer, puis importez ce fichier sur un autre téléphone.</p>
+  <button class="primary" data-savemine ${S.mine.length?"":"disabled"}>Enregistrer mes cartes</button>
+  <button data-importfile>Importer un fichier</button>
+  <input type="file" id="importfile" accept=".json,application/json,text/plain" hidden>
+  <button data-sharecloud ${S.mine.length?"":"disabled"}>Partager mes cartes</button>
+  <p class="muted" style="font-size:.85rem">« Partager » enverra vos cartes Custom dans la collection commune en ligne.</p>
  </div>
- <div class="panel stack"><p class="label">Sauvegarde et partage</p>
-  <p class="muted">Vos cartes perso restent sur ce téléphone. Copiez le code pour les transférer ou les partager, puis collez-le ici sur un autre appareil.</p>
-  <div class="row"><button class="small" data-export>Copier mes cartes</button></div>
-  <textarea id="importbox" rows="3" placeholder="Coller un code de cartes ici"></textarea>
-  <button class="small" data-import>Importer</button>
+ <div class="panel stack"><p class="label">Exporter toutes les cartes</p>
+  <p class="muted">Crée un fichier avec tout le jeu tel qu'il est sur ce téléphone : cartes de base, modifications, suppressions et cartes Custom. Envoyez ce fichier à Claude pour mettre à jour le jeu pour tout le monde.</p>
+  <button class="primary" data-exportall>Exporter (${[...base(),...S.mine].length} cartes)</button>
  </div>`}`}
 
 function editor(){const d=S.draft;return `
@@ -1040,7 +1071,7 @@ function bind(){
     else if("reveal" in d){S.game.showAnswer=!S.game.showAnswer;render()}
     else if("nextround" in d){nextRound();window.scrollTo(0,0)}
     else if("quit" in d){S.view="home";S.game=null;S.hist=[];render()}
-    else if(DEMO&&("new" in d||d.edit||d.askdel||d.del||d.bdelask||d.bdel||"exportall" in d||"export" in d||"import" in d)){S.view="unlock";render()}
+    else if(DEMO&&("new" in d||d.edit||d.askdel||d.del||d.bdelask||d.bdel||"exportall" in d||"savemine" in d||"importfile" in d||"sharecloud" in d)){S.view="unlock";render()}
     else if("new" in d){S.draft={id:null,cat:"Personnage",answer:"",clues:Array(20).fill("")};S.view="editor";render()}
     else if(d.edit){const c=[...S.mine,...base()].find(x=>x.id===d.edit);S.draft={id:c.id,cat:c.cat,answer:c.answer,clues:[...c.clues]};S.view="editor";render();window.scrollTo(0,0)}
     else if(d.resetedit){delete S.edits[d.resetedit];save();S.view="cards";render();toast("Version d'origine rétablie")}
@@ -1058,16 +1089,13 @@ function bind(){
       else{dr.id="m"+Date.now();S.mine.push(dr)}
       save();S.view="cards";render();toast("Carte enregistrée")}
     else if("exportall" in d){exportAll()}
-    else if("export" in d){const code=JSON.stringify(S.mine);const box=document.getElementById("importbox");
-      const fallback=()=>{box.value=code;box.select();toast("Code affiché : copiez-le")};
-      try{navigator.clipboard.writeText(code).then(()=>toast("Cartes copiées"),fallback)}catch(err){fallback()}}
-    else if("import" in d){try{const arr=JSON.parse(document.getElementById("importbox").value);
-      const ok=arr.filter(c=>c&&c.answer&&Array.isArray(c.clues)&&c.clues.length===20).map((c,i)=>({id:"m"+Date.now()+"_"+i,cat:toCat(c.cat||""),answer:String(c.answer),clues:c.clues.map(String)}));
-      if(!ok.length)throw 0;S.mine.push(...ok);save();render();toast(`${ok.length} carte${ok.length>1?"s":""} importée${ok.length>1?"s":""}`)}
-      catch(err){toast("Code invalide : collez le texte copié depuis « Copier mes cartes »")}}
+    else if("savemine" in d){saveMine()}
+    else if("importfile" in d){const f=document.getElementById("importfile");if(f){f.value="";f.click()}}
+    else if("sharecloud" in d){toast("Le partage en ligne arrive bientôt")}
   };
   a.onkeydown=e=>{if(e.target.id==="unlockcode"&&e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-unlock]");if(b)b.click()}};
-  a.onchange=e=>{if(e.target.id==="usetokens"){S.useTokens=e.target.checked;save();return}};
+  a.onchange=e=>{if(e.target.id==="importfile"){const f=e.target.files&&e.target.files[0];if(f)f.text().then(importCards,()=>toast("Fichier illisible"));return}
+if(e.target.id==="usetokens"){S.useTokens=e.target.checked;save();return}};
   a.oninput=e=>{if(e.target.id==="search"){S.q=e.target.value;S.lim=40;refreshList();return}if(e.target.id==="targetin"){S.target=+e.target.value;save();document.querySelectorAll("[data-target]").forEach(b=>b.classList.toggle("on",+b.dataset.target===S.target));return}if(e.target.dataset.p!==undefined){S.players[+e.target.dataset.p]=e.target.value;save()}};
 }
 

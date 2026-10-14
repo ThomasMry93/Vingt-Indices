@@ -27,7 +27,7 @@ La partie s'arrête à la fin de la carte où un joueur atteint le score fixé a
 - Pendant la carte : réponse cachée affichable par le lecteur, indices dévoilés triés par numéro ; à la fin, tous les indices peuvent être affichés
 - Cartes déjà jouées signalées (trouvées ou ratées), tirées en dernier ; indicateur masquable, historique effaçable, filtre dans la liste des cartes
 - Lecture libre des cartes, liste complète avec recherche et filtres
-- Cartes perso : créer, modifier ou supprimer des cartes (gardées sur le téléphone), partager un code de cartes, exporter toutes les cartes
+- Cartes perso : créer, modifier ou supprimer des cartes (gardées sur le téléphone), les enregistrer dans un fichier et importer un fichier de cartes, exporter toutes les cartes
 - 3 styles : BD (par défaut), Carton, Journal
 - Mascotte « ? » : en grand sur l'accueil, puis surgit à chaque écran à l'endroit le plus dégagé pour commenter la partie
 - Animations, sons et confettis, podium de fin de partie
