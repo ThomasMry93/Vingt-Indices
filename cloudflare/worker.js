@@ -39,14 +39,14 @@ export default {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     try {
-      if (url.pathname === "/cards" && request.method === "GET") return listPublic(env);
-      if (url.pathname === "/cards" && request.method === "POST") return addCard(request, env);
+      if (url.pathname === "/cards" && request.method === "GET") return await listPublic(env);
+      if (url.pathname === "/cards" && request.method === "POST") return await addCard(request, env);
       if (url.pathname === "/admin" && request.method === "GET") return new Response(ADMIN_PAGE, { headers: { "Content-Type": "text/html; charset=utf-8" } });
-      if (url.pathname.startsWith("/admin/api/")) return admin(request, env, url.pathname.slice(11));
-      if (url.pathname === "/") return json({ ok: true, service: "Vingt Indices – cartes partagées" });
+      if (url.pathname.startsWith("/admin/api/")) return await admin(request, env, url.pathname.slice(11));
+      if (url.pathname === "/") return json({ ok: true, service: "Vingt Indices – cartes partagées", stockage: env.CARDS ? "relié" : "NON RELIÉ (binding KV CARDS manquant)", admin: env.ADMIN_PASSWORD ? "mot de passe défini" : "ADMIN_PASSWORD manquant" });
       return json({ ok: false, error: "introuvable" }, 404);
     } catch (e) {
-      return json({ ok: false, error: "erreur du serveur" }, 500);
+      return json({ ok: false, error: env.CARDS ? "erreur du serveur : " + (e && e.message) : "stockage non relié (binding KV CARDS manquant)" }, 500);
     }
   },
 };
