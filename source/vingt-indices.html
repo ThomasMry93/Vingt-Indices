@@ -492,7 +492,9 @@ const LS="vingtIndices.v1";
 /* Version démo / jeu complet : sans code, le jeu est en démo (20 cartes, pas de création ni de modification
    de cartes). Le bon code déverrouille le jeu complet sur ce téléphone, une fois pour toutes (jusqu'à la
    désinstallation). Les téléphones qui avaient déjà joué avant l'arrivée du verrou restent déverrouillés. */
-const UNLOCK_KEY="vingtIndices.unlocked",LOCKSEEN_KEY="vingtIndices.lockSeen";
+const UNLOCK_KEY="vingtIndices.unlocked",LOCKSEEN_KEY="vingtIndices.lockSeen",KEY_STORE="vingtIndices.key";
+/* Collection commune en ligne (Cloudflare Worker) : vide = pas encore branchée */
+const CLOUD_URL="";
 const UNLOCK_SALT="vingt-indices/2026";
 // Empreintes SHA-256 des clés d'accès (les clés elles-mêmes ne sont pas écrites ici).
 // Saisie insensible à la casse, aux accents, aux espaces et aux tirets.
@@ -505,7 +507,7 @@ let DEMO=(()=>{try{
   if(!localStorage.getItem(LOCKSEEN_KEY)){localStorage.setItem(LOCKSEEN_KEY,"1");if(localStorage.getItem(LS)){localStorage.setItem(UNLOCK_KEY,"1");return false}}
  }catch(e){}return true})();
 const DEMO_IDS=(()=>{const n={},set=new Set();for(const c of BUILTIN){n[c.cat]=(n[c.cat]||0)+1;if(n[c.cat]<=(DEMO_PER_CAT[c.cat]||0))set.add(c.id)}return set})();
-async function unlock(code){let h="";try{h=await codeHash(code)}catch(e){return false}if(!UNLOCK_HASHES.includes(h))return false;try{localStorage.setItem(UNLOCK_KEY,"1")}catch(e){}DEMO=false;applyDemo();return true}
+async function unlock(code){let h="";try{h=await codeHash(code)}catch(e){return false}if(!UNLOCK_HASHES.includes(h))return false;try{localStorage.setItem(UNLOCK_KEY,"1");localStorage.setItem(KEY_STORE,normCode(code))}catch(e){}DEMO=false;applyDemo();return true}
 function applyDemo(){document.documentElement.classList.toggle("demo",DEMO);const b=document.getElementById("demobar");if(b)b.hidden=!DEMO}
 function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
 function save(){try{localStorage.setItem(LS,JSON.stringify({mine:S.mine,useBuiltin:S.useBuiltin,srcOff:S.srcOff,players:S.players,off:S.off,target:S.target,useTokens:S.useTokens,removed:S.removed,edits:S.edits,sound:S.sound,style:S.style,styleChosen:S.styleChosen,played:S.played,playedShow:S.playedShow,author:S.author}))}catch(e){}}
@@ -853,8 +855,8 @@ function saveMine(){
  saveFile(`vingt-indices-mes-cartes-${dayStamp()}.json`,data,`${list.length} carte${list.length>1?"s":""} enregistrée${list.length>1?"s":""}`);
 }
 /* Importer un fichier : « mes cartes » ou export complet (on n'y prend que les cartes perso). Pas de doublons. */
-function importCards(text){
- let d;try{d=JSON.parse(text)}catch(e){return toast("Fichier illisible : choisissez un fichier enregistré depuis Vingt Indices")}
+function importCards(text,cloud){
+ let d;try{d=JSON.parse(text)}catch(e){return toast(cloud?"Réponse du serveur illisible":"Fichier illisible : choisissez un fichier enregistré depuis Vingt Indices")}
  const arr=Array.isArray(d)?d:(d&&Array.isArray(d.cards)?d.cards.filter(c=>!c.source||c.source==="perso"):null);
  if(!arr)return toast("Ce fichier ne contient pas de cartes Vingt Indices");
  const key=c=>norm(c.answer)+"|"+c.cat;
@@ -864,12 +866,31 @@ function importCards(text){
   if(!c||!c.answer||!Array.isArray(c.clues)||c.clues.length!==20||c.clues.some(t=>!String(t).trim())){bad++;return}
   const card={id:String(c.id||""),cat:toCat(c.cat||""),answer:String(c.answer).trim(),clues:c.clues.map(t=>String(t).trim())};
   if(c.author&&String(c.author).trim())card.author=String(c.author).trim().slice(0,40);
+  if(cloud)card.cloud=1;
   if(have.has(key(card))){dup++;return}
   if(!/^[\w-]+$/.test(card.id)||ids.has(card.id))card.id="m"+Date.now()+"_"+i;
   S.mine.push(card);have.add(key(card));ids.add(card.id);added++});
  save();render();
- toast(added?`${added} carte${added>1?"s":""} ajoutée${added>1?"s":""}${dup?` · ${dup} déjà présente${dup>1?"s":""}`:""}`:dup?`Ces cartes sont déjà dans le jeu`:"Aucune carte valable dans ce fichier");
+ toast(added?`${added} carte${added>1?"s":""} ajoutée${added>1?"s":""}${dup?` · ${dup} déjà présente${dup>1?"s":""}`:""}`:dup?`Ces cartes sont déjà dans le jeu`:cloud?"Aucune carte partagée pour l'instant":"Aucune carte valable dans ce fichier");
 }
+/* Collection commune : envoyer mes cartes (pas celles récupérées du cloud), récupérer toutes les cartes */
+const cloudKey=()=>{try{return localStorage.getItem(KEY_STORE)||""}catch(e){return ""}};
+function shareCloud(){
+ if(!CLOUD_URL)return toast("Le partage en ligne arrive bientôt");
+ const key=cloudKey();if(!key){S.askKey=true;render();setTimeout(()=>{const i=document.getElementById("cloudkey");if(i)i.focus()},50);return}
+ const list=S.mine.filter(c=>!c.cloud).map(c=>({id:c.id,cat:c.cat,answer:c.answer,author:c.author||S.author||"",clues:c.clues}));
+ if(!list.length)return toast("Aucune carte créée sur ce téléphone à partager");
+ toast("Envoi en cours…");
+ fetch(CLOUD_URL+"/cards",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key,cards:list})})
+  .then(r=>r.json()).then(r=>{
+   if(r.ok){const n=r.added+r.updated;toast(`${n} carte${n>1?"s":""} partagée${n>1?"s":""}${r.status==="en attente"?" · visibles après validation":""}`);SFX.win()}
+   else if(/clé/.test(r.error||"")){try{localStorage.removeItem(KEY_STORE)}catch(e){}S.askKey=true;render();toast("Clé d'accès refusée : saisissez-la à nouveau")}
+   else toast("Partage impossible : "+(r.error||"erreur"))})
+  .catch(()=>toast("Pas de connexion : réessayez plus tard"))}
+function getCloud(){
+ if(!CLOUD_URL)return toast("La collection en ligne arrive bientôt");
+ toast("Récupération en cours…");
+ fetch(CLOUD_URL+"/cards",{cache:"no-store"}).then(r=>r.text()).then(t=>importCards(t,true)).catch(()=>toast("Pas de connexion : réessayez plus tard"))}
 function refreshList(){const r=document.getElementById("results");if(r)r.innerHTML=searchResults()}
 function cards(){return `
  <div class="topbar"><button class="link" data-go="home">← Accueil</button>${DEMO?"<span></span>":`<button class="primary small" data-new>+ Nouvelle carte</button>`}</div>
@@ -895,6 +916,7 @@ function cards(){return `
   <button data-importfile>Importer un fichier</button>
   <input type="file" id="importfile" accept=".json,application/json,text/plain" hidden>
   <button data-sharecloud ${S.mine.length?"":"disabled"}>Partager mes cartes</button>
+  ${S.askKey?`<div class="stack" style="gap:6px"><p class="muted" style="font-size:.85rem">Pour partager, saisissez une fois la clé d'accès de ce téléphone.</p><div class="row" style="flex-wrap:nowrap"><input id="cloudkey" autocomplete="off" autocapitalize="characters" placeholder="Clé d'accès" aria-label="Clé d'accès"><button class="primary small" data-cloudkeyok>OK</button></div>${S.keyErr?`<p class="muted" style="color:var(--ko)">Clé non valable</p>`:""}</div>`:""}
   <button data-getcloud>Récupérer les cartes Custom</button>
   <p class="muted" style="font-size:.85rem">« Partager » enverra vos cartes Custom dans la collection commune en ligne ; « Récupérer » ajoutera dans votre jeu toutes les cartes de cette collection (sans doublon). Elles restent sur le téléphone même si elles disparaissent du cloud.</p>
  </div>
@@ -1109,8 +1131,9 @@ function bind(){
     else if("exportall" in d){exportAll()}
     else if("savemine" in d){saveMine()}
     else if("importfile" in d){const f=document.getElementById("importfile");if(f){f.value="";f.click()}}
-    else if("sharecloud" in d){toast("Le partage en ligne arrive bientôt")}
-    else if("getcloud" in d){toast("La collection en ligne arrive bientôt")}
+    else if("sharecloud" in d){shareCloud()}
+    else if("getcloud" in d){getCloud()}
+    else if("cloudkeyok" in d){const v=(document.getElementById("cloudkey")||{}).value||"";codeHash(v).then(h=>{if(UNLOCK_HASHES.includes(h)){try{localStorage.setItem(KEY_STORE,normCode(v))}catch(e){}S.askKey=false;S.keyErr=false;shareCloud()}else{S.keyErr=true;render()}})}
   };
   a.onkeydown=e=>{if(e.target.id==="unlockcode"&&e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-unlock]");if(b)b.click()}};
   a.onchange=e=>{if(e.target.id==="importfile"){const f=e.target.files&&e.target.files[0];if(f)f.text().then(importCards,()=>toast("Fichier illisible"));return}
