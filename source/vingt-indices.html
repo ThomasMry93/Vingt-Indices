@@ -903,10 +903,20 @@ function cards(){return `
   <button class="primary" data-exportall>Exporter (${[...base(),...S.mine].length} cartes)</button>
  </div>`}`}
 
+/* Création : recopier une carte existante pour ne pas partir de zéro */
+function tplResults(){const q=norm((S.tplq||"").trim());
+ if(!q)return `<p class="muted" style="font-size:.85rem">Tapez un nom : la catégorie, la réponse et les 20 indices de la carte choisie rempliront les cases ci-dessous.</p>`;
+ const all=[...base(),...customCards()].filter(c=>norm(c.answer).includes(q));
+ if(!all.length)return `<p class="muted">Aucune carte ne correspond.</p>`;
+ return all.slice(0,8).map(c=>`<div class="card-item"><button class="linkrow" data-tpl="${c.id}"><b>${esc(c.answer)}</b><br><span class="tag"><i class="dot" style="background:${(CATC[c.cat]||CATC.Chose)[0]}"></i>${esc(c.cat)}</span></button><button class="small" data-tpl="${c.id}">Recopier</button></div>`).join("")
+  +(all.length>8?`<p class="muted" style="font-size:.85rem">${all.length-8} autre${all.length-8>1?"s":""} : précisez la recherche.</p>`:"")}
 function editor(){const d=S.draft;return `
  <div class="topbar"><button class="link" data-go="cards">← Annuler</button><button class="primary small" data-savecard>Enregistrer</button></div>
  <h2>${d.id?"Modifier la carte":"Nouvelle carte"}</h2>
  ${d.id&&S.edits[d.id]?`<button class="link" data-resetedit="${d.id}">Rétablir la version d'origine</button>`:""}
+ ${d.id?"":`<div class="panel stack"><p class="label">Partir d'une carte existante</p>
+  <input id="tplsearch" type="search" autocomplete="off" placeholder="Rechercher une carte à recopier…" value="${esc(S.tplq||"")}" aria-label="Rechercher une carte à recopier">
+  <div id="tplres">${tplResults()}</div></div>`}
  <div class="panel stack">
   <label class="stack" style="gap:6px"><span class="label">Catégorie</span><select id="ecat">${THEMES.map(c=>`<option ${d.cat===c?"selected":""}>${c}</option>`).join("")}</select></label>
   <label class="stack" style="gap:6px"><span class="label">Réponse</span><input id="eans" value="${esc(d.answer)}" placeholder="Ex. : Le phare d'Alexandrie"></label>
@@ -1077,7 +1087,8 @@ function bind(){
     else if("nextround" in d){nextRound();window.scrollTo(0,0)}
     else if("quit" in d){S.view="home";S.game=null;S.hist=[];render()}
     else if(DEMO&&("new" in d||d.edit||d.askdel||d.del||d.bdelask||d.bdel||"exportall" in d||"savemine" in d||"importfile" in d||"sharecloud" in d||"getcloud" in d)){S.view="unlock";render()}
-    else if("new" in d){S.draft={id:null,cat:"Personnage",answer:"",author:S.author||"",clues:Array(20).fill("")};S.view="editor";render()}
+    else if(d.tpl){syncDraft();const c=[...base(),...customCards()].find(x=>x.id===d.tpl);if(c){Object.assign(S.draft,{cat:c.cat,answer:c.answer,clues:[...c.clues]});S.tplq="";render();window.scrollTo(0,0);toast(`« ${c.answer} » recopiée : modifiez-la puis enregistrez`)}}
+    else if("new" in d){S.tplq="";S.draft={id:null,cat:"Personnage",answer:"",author:S.author||"",clues:Array(20).fill("")};S.view="editor";render()}
     else if(d.edit){const c=[...S.mine,...base()].find(x=>x.id===d.edit);S.draft={id:c.id,cat:c.cat,answer:c.answer,author:c.author||(S.mine.some(x=>x.id===c.id)?S.author||"":""),clues:[...c.clues]};S.view="editor";render();window.scrollTo(0,0)}
     else if(d.resetedit){delete S.edits[d.resetedit];save();S.view="cards";render();toast("Version d'origine rétablie")}
     else if(d.lcat!==undefined){S.lcat=d.lcat;S.lim=40;render()}
@@ -1104,7 +1115,7 @@ function bind(){
   a.onkeydown=e=>{if(e.target.id==="unlockcode"&&e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-unlock]");if(b)b.click()}};
   a.onchange=e=>{if(e.target.id==="importfile"){const f=e.target.files&&e.target.files[0];if(f)f.text().then(importCards,()=>toast("Fichier illisible"));return}
 if(e.target.id==="usetokens"){S.useTokens=e.target.checked;save();return}};
-  a.oninput=e=>{if(e.target.id==="search"){S.q=e.target.value;S.lim=40;refreshList();return}if(e.target.id==="targetin"){S.target=+e.target.value;save();document.querySelectorAll("[data-target]").forEach(b=>b.classList.toggle("on",+b.dataset.target===S.target));return}if(e.target.dataset.p!==undefined){S.players[+e.target.dataset.p]=e.target.value;save()}};
+  a.oninput=e=>{if(e.target.id==="tplsearch"){S.tplq=e.target.value;const r=document.getElementById("tplres");if(r)r.innerHTML=tplResults();return}if(e.target.id==="search"){S.q=e.target.value;S.lim=40;refreshList();return}if(e.target.id==="targetin"){S.target=+e.target.value;save();document.querySelectorAll("[data-target]").forEach(b=>b.classList.toggle("on",+b.dataset.target===S.target));return}if(e.target.dataset.p!==undefined){S.players[+e.target.dataset.p]=e.target.value;save()}};
 }
 
 /* Bandeau de mise à jour : appelé par l'appli installée quand une nouvelle version est prête */
