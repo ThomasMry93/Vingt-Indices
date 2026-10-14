@@ -238,6 +238,9 @@ input[type=checkbox]{width:auto;accent-color:var(--navy)}
 .chipt.on{background:var(--navy);background-image:none;color:var(--paper);border-color:var(--navy-2);box-shadow:0 2px 0 var(--navy-2);font-weight:800}
 .linkrow{flex:1;min-width:0;background:none;border:0;box-shadow:none;border-radius:0;text-align:left;font-weight:400;padding:.2em 0;color:var(--ink)}
 .linkrow:active{transform:none}
+/* Liste des cartes : défile dans son cadre pour laisser voir les sections suivantes */
+#results{max-height:min(55vh,480px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px;border-top:1.5px dashed var(--rule);border-bottom:1.5px dashed var(--rule)}
+#results > .label:first-child{position:sticky;top:0;z-index:1;background:var(--paper,var(--card,#fff));padding:.4em 0;margin:0}
 .card-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:.6em 0;border-bottom:1.5px dashed var(--rule)}
 .card-item > div{min-width:0}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
@@ -681,8 +684,11 @@ function nextRound(){
 function render(){
   const a=document.getElementById("app");
   applyStyle();a.classList.toggle("is-home",S.view==="home");
+  // Liste des cartes : garder la position de défilement si les filtres n'ont pas changé (suppression, plus de cartes…)
+  const r0=document.getElementById("results"),lk=[S.view,S.q,S.lcat,S.lsrc,S.lauth,S.lplay].join("|"),keep=r0&&lk===render.lk?r0.scrollTop:0;render.lk=lk;
   a.innerHTML=({home,setup,round,final,cards,editor,rules,browse,styles,unlock:unlockView})[S.view]();
   bind();after();
+  const r1=document.getElementById("results");if(r1&&keep)r1.scrollTop=keep;
 }
 function home(){return `
  <div class="topbar"><span></span>${soundBtn()}</div>
@@ -1215,7 +1221,7 @@ function bind(){
   a.onkeydown=e=>{if(e.target.id==="unlockcode"&&e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-unlock]");if(b)b.click()}};
   a.onchange=e=>{if(e.target.id==="importfile"){const f=e.target.files&&e.target.files[0];if(f)f.text().then(importCards,()=>toast("Fichier illisible"));return}
 if(e.target.id==="usetokens"){S.useTokens=e.target.checked;save();return}};
-  a.oninput=e=>{if(e.target.id==="tplsearch"){S.tplq=e.target.value;const r=document.getElementById("tplres");if(r)r.innerHTML=tplResults();return}if(e.target.id==="search"){S.q=e.target.value;S.lim=40;refreshList();return}if(e.target.id==="targetin"){S.target=+e.target.value;save();document.querySelectorAll("[data-target]").forEach(b=>b.classList.toggle("on",+b.dataset.target===S.target));return}if(e.target.dataset.p!==undefined){S.players[+e.target.dataset.p]=e.target.value;save()}};
+  a.oninput=e=>{if(e.target.id==="search"){const r=document.getElementById("results");if(r)r.scrollTop=0}if(e.target.id==="tplsearch"){S.tplq=e.target.value;const r=document.getElementById("tplres");if(r)r.innerHTML=tplResults();return}if(e.target.id==="search"){S.q=e.target.value;S.lim=40;refreshList();return}if(e.target.id==="targetin"){S.target=+e.target.value;save();document.querySelectorAll("[data-target]").forEach(b=>b.classList.toggle("on",+b.dataset.target===S.target));return}if(e.target.dataset.p!==undefined){S.players[+e.target.dataset.p]=e.target.value;save()}};
 }
 
 /* Bandeau de mise à jour : appelé par l'appli installée quand une nouvelle version est prête */
