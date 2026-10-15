@@ -621,8 +621,8 @@ function confetti(big){if(REDUCE)return;const cv=document.createElement("canvas"
 }
 
 /* ---------- partie ---------- */
-function snap(){S.hist=S.hist||[];S.hist.push(JSON.stringify({g:S.game,clueOpen:S.clueOpen,view:S.view}));if(S.hist.length>200)S.hist.shift()}
-function undo(){if(!S.hist||!S.hist.length)return;const h=JSON.parse(S.hist.pop());S.game=h.g;S.clueOpen=h.clueOpen;S.view=h.view;S.jokerAsk=null;S.confirmSkip=false;S.noFx=true;render();toast("Action annulée")}
+function snap(){S.hist=S.hist||[];const pc=S.game&&S.game.cards?card():null;S.hist.push(JSON.stringify({g:S.game,clueOpen:S.clueOpen,view:S.view,pid:pc&&pc.id,pv:pc?S.played[pc.id]||0:0}));if(S.hist.length>200)S.hist.shift()}
+function undo(){if(!S.hist||!S.hist.length)return;const h=JSON.parse(S.hist.pop());S.game=h.g;S.clueOpen=h.clueOpen;S.view=h.view;if(h.pid){if(h.pv)S.played[h.pid]=h.pv;else delete S.played[h.pid];save()}S.jokerAsk=null;S.confirmSkip=false;S.noFx=true;render();toast("Action annulée")}
 function undoBtn(cls){return S.hist&&S.hist.length?`<button class="${cls||"link"}" data-undo>↶ Annuler la dernière action</button>`:""}
 function adjustSheet(){const g=S.game;return `<div class="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="Ajuster les scores">
   <h2>Ajuster les scores</h2>
@@ -653,13 +653,15 @@ function startGame(){
   S.game={players,scores:players.map(()=>0),round:0,target,cards,reader:0,guesser:1%players.length,used:[],showAnswer:false,result:null,tokens:players.map(()=>!!S.useTokens)};
   S.jokerAsk=null;S.clueOpen=null;S.hist=[];S.adjust=false;save();S.view="round";render();window.scrollTo(0,0);
 }
+/* La carte compte comme « déjà jouée » dès qu'elle est trouvée ou ratée (annulable) */
+function markPlayed(){const g=S.game;if(g&&g.result){S.played[card().id]=g.result.found?1:2;save()}}
 function card(){const g=S.game;return g.cards[(g.round+(g.skip||0))%g.cards.length]}
 function skipCard(){snap();const g=S.game;g.skip=(g.skip||0)+1;g.used=[];g.showAnswer=false;g.guesser=(g.reader+1)%g.players.length;S.confirmSkip=false;render();toast("Nouvelle carte")}
 function nextGuesser(){const g=S.game;let i=g.guesser;do{i=(i+1)%g.players.length}while(i===g.reader);g.guesser=i}
 function pick(n){const g=S.game;if(g.used.includes(n)||g.result)return;snap();g.used.push(n);S.clueOpen=n;render()}
 function jokerJudge(found){
   snap();const g=S.game,i=S.jokerAsk,n=g.used.length;g.tokens[i]=false;S.jokerAsk=null;
-  if(found){S.clueOpen=null;const pts=20-n;g.scores[i]+=pts;g.scores[g.reader]+=n;g.result={found:true,who:i,pts,readerPts:n,joker:true}}
+  if(found){S.clueOpen=null;const pts=20-n;g.scores[i]+=pts;g.scores[g.reader]+=n;g.result={found:true,who:i,pts,readerPts:n,joker:true};markPlayed()}
   else toast(`Jeton de ${g.players[i]} utilisé`);
   render();
 }
@@ -672,10 +674,11 @@ function judge(found){
   if(found){const pts=20-n;g.scores[g.guesser]+=pts;g.scores[g.reader]+=n;g.result={found:true,who:g.guesser,pts,readerPts:n}}
   else if(n>=20){g.scores[g.reader]+=20;g.result={found:false,readerPts:20}}
   else{nextGuesser();SFX.ko()}
+  markPlayed();
   render();
 }
 function nextRound(){
-  snap();const g=S.game;if(g.result){S.played[card().id]=g.result.found?1:2;save()}g.round++;
+  snap();const g=S.game;markPlayed();g.round++;
   if(Math.max(...g.scores)>=g.target){S.view="final";render();window.scrollTo(0,0);return}
   g.reader=g.round%g.players.length;g.guesser=(g.reader+1)%g.players.length;g.used=[];g.result=null;g.showAnswer=false;g.showAll=false;render();
 }
