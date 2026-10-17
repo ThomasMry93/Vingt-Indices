@@ -74,7 +74,7 @@ manifest = {
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
-    "orientation": "portrait",
+    "orientation": "any",
     "background_color": "#ffd94a",
     "theme_color": "#ffd94a",
     "icons": [
