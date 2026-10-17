@@ -473,6 +473,27 @@ html.demo body{padding-top:34px}
 @media (prefers-reduced-motion:reduce){.mascot,.mascot *{animation:none!important}.mascot{transform:none;opacity:0;transition:opacity .2s;visibility:visible}.mascot.show{opacity:1}.mascot.leave{opacity:0}}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;transition:none!important}}
+
+/* ---------- Mode horizontal (téléphone ou tablette tournés) : gommettes à droite, le reste à gauche ---------- */
+@media (orientation:landscape) and (min-width:600px){
+  body{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+  .app.wide{max-width:1180px}
+  .rgame{--side:clamp(300px,calc(1.25 * (100dvh - 100px) + 76px),46vw);display:grid!important;grid-template-columns:minmax(0,1fr) var(--side);column-gap:22px!important;row-gap:0!important;align-items:start}
+  .rgame>*{grid-column:1;min-width:0}
+  .rgame>*:not(:last-child){margin-bottom:14px}
+  .rgame>.r-side{grid-column:2;grid-row:1/span 40;position:sticky;top:12px;margin-bottom:0;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  .rgame>.r-side::-webkit-scrollbar{display:none}
+  .rgame>.r-side .board{gap:clamp(6px,1.4vh,12px)}
+  .rgame>.r-side .sheetboard{padding:clamp(8px,2vh,14px)}
+  .rgame>.overlay{grid-column:auto}
+  /* Fiche d'indice : la fiche à gauche, les boutons à droite */
+  .overlay{align-items:center}
+  .sheet{margin-top:0}
+  .sheet:has(>.flip){max-width:min(920px,100%);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:18px;row-gap:12px;align-items:center}
+  .sheet:has(>.flip)>*{grid-column:2}
+  .sheet:has(>.flip)>.flip{grid-column:1;grid-row:1/span 10}
+  .face{min-height:min(200px,calc(100dvh - 120px))}
+}
 </style>
 
 <div class="app" id="app"></div>
@@ -686,7 +707,7 @@ function nextRound(){
 /* ---------- rendu ---------- */
 function render(){
   const a=document.getElementById("app");
-  applyStyle();a.classList.toggle("is-home",S.view==="home");
+  applyStyle();a.classList.toggle("is-home",S.view==="home");a.classList.toggle("wide",S.view==="round"||S.view==="browse");
   // Liste des cartes : garder la position de défilement si les filtres n'ont pas changé (suppression, plus de cartes…)
   const r0=document.getElementById("results"),lk=[S.view,S.q,S.lcat,S.lsrc,S.lauth,S.lplay].join("|"),keep=r0&&lk===render.lk?r0.scrollTop:0;render.lk=lk;
   a.innerHTML=({home,setup,round,final,cards,editor,rules,browse,styles,unlock:unlockView})[S.view]();
@@ -775,13 +796,13 @@ function round(){
     ${undoBtn()}
   </div></div>`:"");
   const sheetAll=S.adjust?adjustSheet():sheet;
-  return `<div class="stack" style="${catStyle(c)};gap:14px">
+  return `<div class="stack rgame" style="${catStyle(c)};gap:14px">
  <div class="topbar"><button class="link" data-quit>Quitter</button><span class="label">Objectif ${g.target} pts</span>${soundBtn()}</div>
  ${strip()}
  ${top}
- ${g.result?"":board(g.used,"data-n",false)}
+ ${g.result?"":`<div class="r-side">${board(g.used,"data-n",false)}</div>`}
  ${jokerBar()}
- ${g.result&&g.showAll?allClues(c,g.used):clueList(c,g.used)}
+ ${g.result&&g.showAll?`<div class="r-side">${allClues(c,g.used)}</div>`:g.result&&g.used.length?`<div class="r-side">${clueList(c,g.used)}</div>`:clueList(c,g.used)}
  ${g.result&&g.showAll?`<button class="primary block big" data-nextround>${Math.max(...g.scores)>=g.target?"Voir le classement":"Carte suivante"}</button>`:""}
  ${g.result?"":`<div class="row" style="justify-content:space-between">${undoBtn()}<button class="link" data-adjust>Ajuster les scores</button></div>
  ${S.confirmSkip?`<div class="row"><button class="small" style="flex:1" data-skipno>Garder cette carte</button><button class="small primary" style="flex:1" data-skipyes>Passer, sans points</button></div>`:`<button class="small" data-skip>Passer à la carte suivante</button>`}`}
@@ -814,9 +835,9 @@ function browse(){const b=S.browse;
    <div class="gbody">${b.mode==="all"?`<p class="label">La réponse</p><p class="answerline">${esc(c.answer)}</p>`:`<p class="muted">Touchez une gommette pour dévoiler l'indice.</p>${ansRow(c,b.showAnswer,"data-breveal")}`}${byLine(c)}${playState(c)}</div></section>`;
  let body;
  if(b.mode==="all"){body=`<ol class="cluelist">${c.clues.map((t,i)=>`<li><span>${i+1}</span><p>${esc(t)}</p></li>`).join("")}</ol>`}
- else{body=`${board(b.used,"data-bn",false)}${clueList(c,b.used)}
+ else{body=`<div class="r-side">${board(b.used,"data-bn",false)}</div>${clueList(c,b.used)}
   ${b.used.length<20?`<button class="small" data-ball>Dévoiler tous les indices</button>`:""}`}
- return `<div class="stack" style="${catStyle(c)};gap:14px">${top}${seg}${head}${body}
+ return `<div class="stack rgame" style="${catStyle(c)};gap:14px">${top}${seg}${head}${b.mode==="all"?`<div class="r-side">${body}</div>`:body}
  ${b.cards.length>1?`<div class="row"><button style="flex:1" data-bprev ${b.i===0?"disabled":""}>← Précédente</button><button class="primary" style="flex:1" data-bnext>Suivante →</button></div>`:""}
  ${S.confirmBDel===c.id?`<div class="row"><button class="small" style="flex:1" data-bdelno>Garder</button><button class="small ko" style="flex:1" data-bdel="${c.id}">Supprimer définitivement</button></div>`:DEMO?"":`<button class="link" data-bdelask="${c.id}">Supprimer cette carte</button>`}</div>`}
 function styles(){return `
